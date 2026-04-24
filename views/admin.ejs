@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Product | GardenRich Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-zinc-50 font-sans antialiased text-zinc-900">
+    <%- include("partials/header") %>
+
+    <div class="max-w-3xl mx-auto my-16 px-6 pb-24">
+        <a href="/" class="inline-flex items-center text-sm font-semibold text-zinc-500 hover:text-green-700 mb-6 transition-colors">
+            &larr; Back to Store
+        </a>
+
+        <div class="bg-white rounded-3xl shadow-xl shadow-zinc-200/50 border border-zinc-100 overflow-hidden">
+            <div class="p-8 border-b border-zinc-100 bg-zinc-50/50">
+                <h2 class="text-3xl font-black tracking-tight text-zinc-900">Add New Product</h2>
+                <p class="text-zinc-500 text-sm mt-1">Fill in the details to list a new item in the GardenRich store.</p>
+            </div>
+
+            <form action="/admin/add-product" method="POST" enctype="multipart/form-data" class="p-8 space-y-6">
+
+                <!-- Product Name -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Product Name</label>
+                    <input type="text" name="name" placeholder="e.g. Amul Fresh Milk" required
+                        class="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all">
+                </div>
+
+                <!-- Category -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Category</label>
+                    <select name="category" required
+                        class="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all appearance-none cursor-pointer">
+                        <option value="" disabled selected>Select a category</option>
+                        <% categories.forEach(cat => { %>
+                            <% if (cat.slug !== 'all') { %>
+                            <option value="<%= cat.slug %>"><%= cat.name %></option>
+                            <% } %>
+                        <% }) %>
+                    </select>
+                </div>          
+
+                <!-- Variants -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Pack Sizes / Variants</label>
+                    <p class="text-xs text-zinc-400 mb-4">Each size will appear as a dropdown option on the product card.</p>
+
+                    <div class="bg-zinc-50 rounded-2xl border border-zinc-200 overflow-hidden">
+                        <!-- Header -->
+                        <div class="grid grid-cols-12 gap-3 px-4 py-3 border-b border-zinc-200 bg-zinc-100">
+                            <div class="col-span-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">Qty</div>
+                            <div class="col-span-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">Unit</div>
+                            <div class="col-span-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">Our Price</div>
+                            <div class="col-span-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">MRP</div>
+                            <div class="col-span-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">Stock</div>
+                            <div class="col-span-1"></div>
+                        </div>
+
+                        <div id="variantsContainer" class="divide-y divide-zinc-100">
+                            <!-- Default variant row -->
+                            <div class="variant-row grid grid-cols-12 gap-3 p-4 items-center">
+                                <div class="col-span-2">
+                                    <input type="number" name="weightValue[]" placeholder="500" required min="0"
+                                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                </div>
+                                <div class="col-span-2">
+                                    <select name="unit[]"
+                                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold appearance-none cursor-pointer transition-all">
+                                        <option value="ml">ml</option>
+                                        <option value="L">L</option>
+                                        <option value="g">g</option>
+                                        <option value="kg">kg</option>
+                                        <option value="pcs">pcs</option>
+                                        <option value="dozen">Dozen</option>
+                                        <option value="pack">Pack</option>
+                                        <option value="bottle">Bottle</option>
+                                        <option value="box">Box</option>
+                                        <option value="pouch">Pouch</option>
+                                    </select>
+                                </div>
+                                <div class="col-span-2">
+                                    <input type="number" name="price[]" placeholder="0" required min="0"
+                                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                </div>
+                                <div class="col-span-2">
+                                    <input type="number" name="mrp[]" placeholder="0" min="0"
+                                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                </div>
+                                <div class="col-span-2">
+                                    <input type="number" name="stock[]" placeholder="0" min="0"
+                                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                </div>
+                                <div class="col-span-1 flex justify-center">
+                                    <button type="button" onclick="removeVariant(this)"
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-400 hover:bg-red-100 transition-all invisible">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="button" onclick="addVariant()"
+                        class="mt-3 flex items-center gap-2 text-sm font-bold text-green-600 hover:text-green-700 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        Add Another Size
+                    </button>
+                </div>
+
+                <!-- Product Image -->
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Product Image</label>
+                    <input type="file" name="imageFile" accept="image/*" required id="imageInput"
+                        class="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-2xl file:bg-zinc-900 file:text-white file:rounded-xl file:border-0 file:px-4 file:py-2 file:text-xs file:font-bold cursor-pointer">
+                    <img id="imagePreview" class="mt-3 w-full h-48 object-cover rounded-2xl hidden">
+                </div>
+
+                <!-- Is Featured -->
+                <div class="flex items-center gap-3 p-4 bg-zinc-50 rounded-2xl border border-zinc-200">
+                    <input type="checkbox" name="is_featured" id="is_featured" value="true"
+                        class="w-5 h-5 accent-green-600 cursor-pointer">
+                    <div>
+                        <label for="is_featured" class="font-bold text-zinc-700 cursor-pointer">Mark as Featured / Best Seller</label>
+                        <p class="text-xs text-zinc-400">Featured products appear at the top of the store</p>
+                    </div>
+                </div>
+
+                <button type="submit"
+                    class="w-full bg-zinc-900 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all active:scale-95">
+                    List Product
+                </button>
+
+            </form>
+        </div>
+    </div>
+
+    <script src="/javascript/index.js"></script>
+
+    <script>
+        document.getElementById("imageInput").addEventListener("change", function () {
+            const file = this.files[0];
+            const preview = document.getElementById("imagePreview");
+            if (file) {
+                preview.src = URL.createObjectURL(file);
+                preview.classList.remove("hidden");
+            }
+        });
+
+        function addVariant() {
+            const container = document.getElementById("variantsContainer");
+            const div = document.createElement("div");
+            div.className = "variant-row grid grid-cols-12 gap-3 p-4 items-center";
+            div.innerHTML = `
+                <div class="col-span-2">
+                    <input type="number" name="weightValue[]" placeholder="500" required min="0"
+                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                </div>
+                <div class="col-span-2">
+                    <select name="unit[]"
+                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold appearance-none cursor-pointer transition-all">
+                        <option value="ml">ml</option>
+                        <option value="L">L</option>
+                        <option value="g">g</option>
+                        <option value="kg">kg</option>
+                        <option value="pcs">pcs</option>
+                        <option value="dozen">Dozen</option>
+                        <option value="pack">Pack</option>
+                        <option value="bottle">Bottle</option>
+                        <option value="box">Box</option>
+                        <option value="pouch">Pouch</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <input type="number" name="price[]" placeholder="0" required min="0"
+                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                </div>
+                <div class="col-span-2">
+                    <input type="number" name="mrp[]" placeholder="0" min="0"
+                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                </div>
+                <div class="col-span-3">
+                    <input type="number" name="stock[]" placeholder="0" min="0"
+                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                </div>
+                <div class="col-span-1 flex justify-center">
+                    <button type="button" onclick="removeVariant(this)"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-400 hover:bg-red-100 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeVariant(btn) {
+            const rows = document.querySelectorAll(".variant-row");
+            if (rows.length > 1) {
+                btn.closest(".variant-row").remove();
+            }
+        }
+    </script>
+</body>
+</html>

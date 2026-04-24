@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard | GardenRich</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="bg-zinc-100 font-sans antialiased text-zinc-900">
+    <%- include("partials/header") %>
+
+        <div class="max-w-7xl mx-auto px-6 py-10 pb-24">
+            <div class="flex gap-8">
+
+                <!-- SIDEBAR -->
+                <div class="w-56 shrink-0">
+                    <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm overflow-hidden sticky top-24">
+                        <div class="p-4 border-b border-zinc-100 bg-zinc-50">
+                            <p class="text-[10px] font-black uppercase tracking-widest text-zinc-400">Admin</p>
+                            <p class="text-sm font-black text-zinc-800 mt-0.5">Dashboard</p>
+                        </div>
+                        <nav class="p-2 space-y-1">
+                            <button onclick="switchTab('add-product')" id="tab-btn-add-product"
+                                class="sidebar-tab w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all text-left bg-zinc-900 text-white">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 4v16m8-8H4" />
+                                </svg>
+                                Add Product
+                            </button>
+                            <button onclick="switchTab('categories')" id="tab-btn-categories"
+                                class="sidebar-tab w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all text-left text-zinc-600 hover:bg-zinc-50">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 9.172V5a2 2 0 012-2z" />
+                                </svg>
+                                Categories
+                            </button>
+                            <button onclick="switchTab('settings')" id="tab-btn-settings"
+                                class="sidebar-tab w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold transition-all text-left text-zinc-600 hover:bg-zinc-50">
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                                Store Settings
+                            </button>
+                        </nav>
+                        <div class="p-2 pt-0 border-t border-zinc-100 mt-1">
+                            <a href="/admin/orders"
+                                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-zinc-600 hover:bg-zinc-50 transition-all">
+                                <svg class="w-4 h-4 shrink-0 text-zinc-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                </svg>
+                                Orders
+                            </a>
+                            <a href="/"
+                                class="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-zinc-600 hover:bg-zinc-50 transition-all">
+                                <svg class="w-4 h-4 shrink-0 text-zinc-400" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                                </svg>
+                                View Store
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTENT -->
+                <div class="flex-1 min-w-0">
+
+                    <!-- ═══════════════════════════════════ -->
+                    <!-- ADD PRODUCT TAB                     -->
+                    <!-- ═══════════════════════════════════ -->
+                    <div id="tab-add-product" class="tab-panel">
+
+                        <div
+                            class="bg-white rounded-3xl shadow-xl shadow-zinc-200/50 border border-zinc-100 overflow-hidden">
+                            <div class="p-8 border-b border-zinc-100 bg-zinc-50/50">
+                                <h2 class="text-3xl font-black tracking-tight text-zinc-900">Add New Product</h2>
+                                <p class="text-zinc-500 text-sm mt-1">Fill in the details to list a new item in the
+                                    GardenRich store.</p>
+                            </div>
+
+                            <form action="/admin/add-product" method="POST" enctype="multipart/form-data"
+                                class="p-8 space-y-6">
+
+                                <!-- Product Name -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Product
+                                        Name</label>
+                                    <input type="text" name="name" placeholder="e.g. Amul Fresh Milk" required
+                                        class="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all">
+                                </div>
+
+                                <!-- Category -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Category</label>
+                                    <select name="category" required
+                                        class="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-500/10 focus:border-green-500 transition-all appearance-none cursor-pointer">
+                                        <option value="" disabled selected>Select a category</option>
+                                        <% categories.forEach(cat=> { %>
+                                            <% if (cat.slug !=='all' ) { %>
+                                                <option value="<%= cat.slug %>">
+                                                    <%= cat.name %>
+                                                </option>
+                                                <% } %>
+                                                    <% }) %>
+                                    </select>
+                                </div>
+
+                                <!-- Variants -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-1">Pack
+                                        Sizes / Variants</label>
+                                    <p class="text-xs text-zinc-400 mb-4">Each size will appear as a dropdown option on
+                                        the product card.</p>
+
+                                    <div class="bg-zinc-50 rounded-2xl border border-zinc-200 overflow-hidden">
+                                        <div
+                                            class="grid grid-cols-12 gap-3 px-4 py-3 border-b border-zinc-200 bg-zinc-100">
+                                            <div
+                                                class="col-span-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                                Qty</div>
+                                            <div
+                                                class="col-span-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                                Unit</div>
+                                            <div
+                                                class="col-span-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                                Price ₹</div>
+                                            <div
+                                                class="col-span-2 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                                MRP ₹</div>
+                                            <div
+                                                class="col-span-3 text-[10px] font-black uppercase tracking-widest text-zinc-500">
+                                                Stock</div>
+                                            <div class="col-span-1"></div>
+                                        </div>
+                                        <div id="variantsContainer" class="divide-y divide-zinc-100">
+                                            <div class="variant-row grid grid-cols-12 gap-3 p-4 items-center">
+                                                <div class="col-span-2">
+                                                    <input type="number" name="weightValue[]" placeholder="500" required
+                                                        min="0"
+                                                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                                </div>
+                                                <div class="col-span-2">
+                                                    <select name="unit[]"
+                                                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold appearance-none cursor-pointer transition-all">
+                                                        <option value="ml">ml</option>
+                                                        <option value="L">L</option>
+                                                        <option value="g">g</option>
+                                                        <option value="kg">kg</option>
+                                                        <option value="pcs">pcs</option>
+                                                        <option value="dozen">Dozen</option>
+                                                        <option value="pack">Pack</option>
+                                                        <option value="bottle">Bottle</option>
+                                                        <option value="box">Box</option>
+                                                        <option value="pouch">Pouch</option>
+                                                    </select>
+                                                </div>
+                                                <div class="col-span-2">
+                                                    <input type="number" name="price[]" placeholder="0" required min="0"
+                                                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                                </div>
+                                                <div class="col-span-2">
+                                                    <input type="number" name="mrp[]" placeholder="0" min="0"
+                                                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                                </div>
+                                                <div class="col-span-3">
+                                                    <input type="number" name="stock[]" placeholder="0" min="0"
+                                                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                                </div>
+                                                <div class="col-span-1 flex justify-center">
+                                                    <button type="button" onclick="removeVariantRow(this)"
+                                                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-400 hover:bg-red-100 transition-all invisible">
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                        </svg>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button type="button" onclick="addVariantRow()"
+                                        class="mt-3 flex items-center gap-2 text-sm font-bold text-green-600 hover:text-green-700 transition-colors">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M12 4v16m8-8H4" />
+                                        </svg>
+                                        Add Another Size
+                                    </button>
+                                </div>
+
+                                <!-- Image -->
+                                <div>
+                                    <label
+                                        class="block text-xs font-bold uppercase tracking-widest text-zinc-500 mb-2">Product
+                                        Image</label>
+                                    <input type="file" name="imageFile" accept="image/*" required id="imageInput"
+                                        class="w-full bg-zinc-50 border border-zinc-200 p-4 rounded-2xl file:bg-zinc-900 file:text-white file:rounded-xl file:border-0 file:px-4 file:py-2 file:text-xs file:font-bold cursor-pointer">
+                                    <img id="imagePreview" class="mt-3 w-full h-48 object-cover rounded-2xl hidden">
+                                </div>
+
+                                <!-- Is Featured -->
+                                <div class="flex items-center gap-3 p-4 bg-zinc-50 rounded-2xl border border-zinc-200">
+                                    <input type="checkbox" name="is_featured" id="is_featured" value="true"
+                                        class="w-5 h-5 accent-green-600 cursor-pointer">
+                                    <div>
+                                        <label for="is_featured" class="font-bold text-zinc-700 cursor-pointer">Mark as
+                                            Featured / Best Seller</label>
+                                        <p class="text-xs text-zinc-400">Featured products appear at the top of the
+                                            store</p>
+                                    </div>
+                                </div>
+
+                                <button type="submit"
+                                    class="w-full bg-zinc-900 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all active:scale-95">
+                                    List Product
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- ═══════════════════════════════════ -->
+                    <!-- CATEGORIES TAB                      -->
+                    <!-- ═══════════════════════════════════ -->
+                    <div id="tab-categories" class="tab-panel hidden">
+
+                        <div class="mb-6">
+                            <h1 class="font-extrabold text-3xl tracking-tight text-zinc-900">Categories</h1>
+                            <p class="text-zinc-400 text-sm mt-1">Add, rename or remove product categories.</p>
+                        </div>
+
+                        <!-- Add New Category -->
+                        <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6 mb-6">
+                            <h2
+                                class="text-xs font-black uppercase tracking-widest text-zinc-400 mb-5 pb-3 border-b border-zinc-100">
+                                Add New Category
+                            </h2>
+                            <div class="flex gap-3">
+                                <input type="text" id="newCatName" placeholder="Category name — e.g. Beverages"
+                                    class="flex-1 bg-zinc-50 border border-zinc-200 p-3.5 rounded-xl focus:outline-none focus:border-green-500 text-sm font-medium transition-all">
+                                <button onclick="addCategory()"
+                                    class="bg-green-600 hover:bg-green-700 text-white px-6 py-3.5 rounded-xl font-black text-sm transition-all active:scale-95 shrink-0">
+                                    + Add
+                                </button>
+                            </div>
+                            <p class="text-xs text-zinc-400 mt-2">Slug is auto-generated from the name you enter.</p>
+                        </div>
+
+                        <!-- Existing Categories -->
+                        <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
+                            <h2
+                                class="text-xs font-black uppercase tracking-widest text-zinc-400 mb-5 pb-3 border-b border-zinc-100">
+                                All Categories
+                            </h2>
+
+                            <div id="categoriesList" class="space-y-2">
+                                <% categories.forEach(cat=> { %>
+                                    <div class="category-row group flex items-center gap-3 p-4 bg-zinc-50 hover:bg-zinc-100 rounded-xl border border-zinc-100 transition-all"
+                                        data-id="<%= cat.id %>" data-slug="<%= cat.slug %>">
+
+                                        <!-- Tag icon -->
+                                        <div
+                                            class="w-8 h-8 bg-white border border-zinc-200 rounded-lg flex items-center justify-center shrink-0">
+                                            <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 9.172V5a2 2 0 012-2z" />
+                                            </svg>
+                                        </div>
+
+                                        <!-- Name — editable on click -->
+                                        <div class="flex-1 min-w-0">
+                                            <% if (cat.slug==='all' ) { %>
+                                                <p class="font-bold text-sm text-zinc-800">
+                                                    <%= cat.name %>
+                                                </p>
+                                                <% } else { %>
+                                                    <input type="text"
+                                                        class="cat-name-input w-full bg-transparent font-bold text-sm text-zinc-800 border border-transparent rounded-lg px-2 py-1 focus:outline-none focus:bg-white focus:border-green-500 transition-all cursor-pointer hover:border-zinc-200"
+                                                        value="<%= cat.name %>" data-original="<%= cat.name %>"
+                                                        onchange="renameCategory(this)" title="Click to rename">
+                                                    <% } %>
+                                                        <p class="text-[10px] text-zinc-400 font-mono px-2">slug: <%=
+                                                                cat.slug %>
+                                                        </p>
+                                        </div>
+
+                                        <!-- Product count -->
+                                        <span
+                                            class="text-[10px] font-black text-zinc-400 bg-zinc-100 px-2.5 py-1 rounded-lg shrink-0"
+                                            id="cat-count-<%= cat.id %>">
+                                            ...
+                                        </span>
+
+                                        <!-- Actions -->
+                                        <% if (cat.slug==='all' ) { %>
+                                            <span
+                                                class="text-[10px] font-bold text-zinc-300 bg-zinc-100 px-3 py-2 rounded-xl shrink-0">
+                                                🔒 Protected
+                                            </span>
+                                            <% } else { %>
+                                                <button onclick="deleteCategory(this)"
+                                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-300 hover:bg-red-50 hover:text-red-400 transition-all shrink-0 opacity-0 group-hover:opacity-100">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                        viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                                            stroke-width="2"
+                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                    </svg>
+                                                </button>
+                                                <% } %>
+
+                                    </div>
+                                    <% }) %>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- ═══════════════════════════════════ -->
+                    <!-- STORE SETTINGS TAB                  -->
+                    <!-- ═══════════════════════════════════ -->
+                    <div id="tab-settings" class="tab-panel hidden">
+
+                        <div class="mb-6">
+                            <h1 class="font-extrabold text-3xl tracking-tight text-zinc-900">Store Settings</h1>
+                            <p class="text-zinc-400 text-sm mt-1">Manage shipping, discounts and order rules.</p>
+                        </div>
+
+                        <div class="space-y-6">
+
+                            <!-- ── Shipping ── -->
+                            <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
+                                <div class="pb-4 border-b border-zinc-100 mb-5 flex items-center gap-3">
+                                    <div class="w-9 h-9 bg-blue-50 rounded-xl flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-sm font-black text-zinc-900">Shipping</h2>
+                                        <p class="text-xs text-zinc-400">Set delivery charges and free shipping
+                                            threshold</p>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label
+                                            class="text-xs font-black uppercase tracking-widest text-zinc-400 block mb-2">Shipping
+                                            Charge (₹)</label>
+                                        <div class="relative">
+                                            <span
+                                                class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-black text-zinc-400">₹</span>
+                                            <input type="number" id="setting-shipping_cost" min="0" placeholder="0"
+                                                value="<%= settings.shipping_cost || 0 %>"
+                                                class="w-full bg-zinc-50 border border-zinc-200 p-3.5 pl-8 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                        </div>
+                                        <p class="text-xs text-zinc-400 mt-1.5">Set 0 for always free shipping</p>
+                                    </div>
+                                    <div>
+                                        <label
+                                            class="text-xs font-black uppercase tracking-widest text-zinc-400 block mb-2">Free
+                                            Shipping Above (₹)</label>
+                                        <div class="relative">
+                                            <span
+                                                class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-black text-zinc-400">₹</span>
+                                            <input type="number" id="setting-free_shipping_above" min="0"
+                                                placeholder="500" value="<%= settings.free_shipping_above || 0 %>"
+                                                class="w-full bg-zinc-50 border border-zinc-200 p-3.5 pl-8 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                        </div>
+                                        <p class="text-xs text-zinc-400 mt-1.5">Set 0 to disable free shipping threshold
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- Live preview -->
+                                <div
+                                    class="mt-4 p-3 bg-zinc-50 rounded-xl border border-zinc-100 text-xs text-zinc-500 font-medium">
+                                    <span class="font-black text-zinc-700">Preview: </span>
+                                    Orders under ₹<span id="preview-free-above">
+                                        <%= settings.free_shipping_above || 0 %>
+                                    </span>
+                                    will be charged ₹<span id="preview-shipping">
+                                        <%= settings.shipping_cost || 0 %>
+                                    </span>.
+                                    Orders ₹<span id="preview-free-above-2">
+                                        <%= settings.free_shipping_above || 0 %>
+                                    </span>+
+                                    get <span class="text-green-600 font-black">FREE shipping</span>.
+                                </div>
+                            </div>
+
+                            <!-- ── Order Rules ── -->
+                            <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
+                                <div class="pb-4 border-b border-zinc-100 mb-5 flex items-center gap-3">
+                                    <div class="w-9 h-9 bg-orange-50 rounded-xl flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-orange-500" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-sm font-black text-zinc-900">Order Rules</h2>
+                                        <p class="text-xs text-zinc-400">Set minimum order requirements</p>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label
+                                        class="text-xs font-black uppercase tracking-widest text-zinc-400 block mb-2">Minimum
+                                        Order Value (₹)</label>
+                                    <div class="relative max-w-xs">
+                                        <span
+                                            class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-black text-zinc-400">₹</span>
+                                        <input type="number" id="setting-minimum_order_value" min="0" placeholder="0"
+                                            value="<%= settings.minimum_order_value || 0 %>"
+                                            class="w-full bg-zinc-50 border border-zinc-200 p-3.5 pl-8 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                    </div>
+                                    <p class="text-xs text-zinc-400 mt-1.5">Set 0 to allow any order value. Customers
+                                        can't checkout below this amount.</p>
+                                </div>
+                            </div>
+
+                            <!-- ── Discount ── -->
+                            <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
+                                <div class="pb-4 border-b border-zinc-100 mb-5 flex items-center gap-3">
+                                    <div class="w-9 h-9 bg-green-50 rounded-xl flex items-center justify-center">
+                                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 9.172V5a2 2 0 012-2z" />
+                                        </svg>
+                                    </div>
+                                    <div>
+                                        <h2 class="text-sm font-black text-zinc-900">Discount / Coupon</h2>
+                                        <p class="text-xs text-zinc-400">Create a discount code customers can apply at
+                                            checkout</p>
+                                    </div>
+                                </div>
+
+                                <!-- Discount type selector -->
+                                <div class="mb-5">
+                                    <label
+                                        class="text-xs font-black uppercase tracking-widest text-zinc-400 block mb-3">Discount
+                                        Type</label>
+                                    <div class="grid grid-cols-3 gap-3">
+                                        <label class="discount-type-option cursor-pointer">
+                                            <input type="radio" name="discount_type" value="none" class="sr-only"
+                                                <%=(settings.discount_type || 'none' )==='none' ? 'checked' : '' %>>
+                                            <div class="p-3 rounded-xl border-2 text-center transition-all
+                            <%= (settings.discount_type || 'none') === 'none' ? 'border-zinc-900 bg-zinc-900 text-white' : 'border-zinc-200 bg-zinc-50 text-zinc-600' %>
+                            hover:border-zinc-400">
+                                                <p class="text-xs font-black">No Discount</p>
+                                                <p class="text-[10px] mt-0.5 opacity-60">Disabled</p>
+                                            </div>
+                                        </label>
+                                        <label class="discount-type-option cursor-pointer">
+                                            <input type="radio" name="discount_type" value="percentage" class="sr-only"
+                                                <%=(settings.discount_type)==='percentage' ? 'checked' : '' %>>
+                                            <div class="p-3 rounded-xl border-2 text-center transition-all
+                            <%= (settings.discount_type) === 'percentage' ? 'border-green-600 bg-green-600 text-white' : 'border-zinc-200 bg-zinc-50 text-zinc-600' %>
+                            hover:border-green-400">
+                                                <p class="text-xs font-black">% Off</p>
+                                                <p class="text-[10px] mt-0.5 opacity-60">Percentage</p>
+                                            </div>
+                                        </label>
+                                        <label class="discount-type-option cursor-pointer">
+                                            <input type="radio" name="discount_type" value="flat" class="sr-only"
+                                                <%=(settings.discount_type)==='flat' ? 'checked' : '' %>>
+                                            <div class="p-3 rounded-xl border-2 text-center transition-all
+                            <%= (settings.discount_type) === 'flat' ? 'border-green-600 bg-green-600 text-white' : 'border-zinc-200 bg-zinc-50 text-zinc-600' %>
+                            hover:border-green-400">
+                                                <p class="text-xs font-black">₹ Off</p>
+                                                <p class="text-[10px] mt-0.5 opacity-60">Flat Amount</p>
+                                            </div>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- Discount fields — shown/hidden based on type -->
+                                <div id="discountFields"
+                                    class="<%= (settings.discount_type && settings.discount_type !== 'none') ? '' : 'hidden' %> space-y-4">
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label
+                                                class="text-xs font-black uppercase tracking-widest text-zinc-400 block mb-2">Coupon
+                                                Code</label>
+                                            <input type="text" id="setting-discount_code"
+                                                value="<%= settings.discount_code || '' %>" placeholder="e.g. SAVE20"
+                                                class="w-full bg-zinc-50 border border-zinc-200 p-3.5 rounded-xl focus:outline-none focus:border-green-500 text-sm font-black uppercase tracking-widest transition-all"
+                                                oninput="this.value = this.value.toUpperCase()">
+                                            <p class="text-xs text-zinc-400 mt-1.5">Customers enter this code at
+                                                checkout</p>
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="text-xs font-black uppercase tracking-widest text-zinc-400 block mb-2"
+                                                id="discountValueLabel">
+                                                Discount Value (<%= settings.discount_type==='percentage' ? '%' : '₹' %>
+                                                    )
+                                            </label>
+                                            <div class="relative">
+                                                <span
+                                                    class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-black text-zinc-400"
+                                                    id="discountPrefix">
+                                                    <%= settings.discount_type==='percentage' ? '%' : '₹' %>
+                                                </span>
+                                                <input type="number" id="setting-discount_value" min="0"
+                                                    value="<%= settings.discount_value || 0 %>" placeholder="10"
+                                                    class="w-full bg-zinc-50 border border-zinc-200 p-3.5 pl-8 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label
+                                                class="text-xs font-black uppercase tracking-widest text-zinc-400 block mb-2">Min.
+                                                Order for Discount (₹)</label>
+                                            <div class="relative">
+                                                <span
+                                                    class="absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-black text-zinc-400">₹</span>
+                                                <input type="number" id="setting-discount_min_order" min="0"
+                                                    value="<%= settings.discount_min_order || 0 %>" placeholder="0"
+                                                    class="w-full bg-zinc-50 border border-zinc-200 p-3.5 pl-8 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                            </div>
+                                            <p class="text-xs text-zinc-400 mt-1.5">Set 0 for no minimum</p>
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="text-xs font-black uppercase tracking-widest text-zinc-400 block mb-2">Expiry
+                                                Date (optional)</label>
+                                            <input type="date" id="setting-discount_expiry"
+                                                value="<%= settings.discount_expiry || '' %>"
+                                                class="w-full bg-zinc-50 border border-zinc-200 p-3.5 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                                            <p class="text-xs text-zinc-400 mt-1.5">Leave blank for no expiry</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- Live discount preview -->
+                                    <div
+                                        class="p-3 bg-green-50 border border-green-100 rounded-xl text-xs text-zinc-500">
+                                        <span class="font-black text-green-700">Preview: </span>
+                                        Code <span class="font-black text-zinc-800" id="preview-code">
+                                            <%= settings.discount_code || 'CODE' %>
+                                        </span>
+                                        gives <span class="font-black text-green-700" id="preview-discount">
+                                            <%= settings.discount_type==='percentage' ? (settings.discount_value || 0)
+                                                + '%' : '₹' + (settings.discount_value || 0) %>
+                                        </span> off
+                                        <span id="preview-minorder"
+                                            class="<%= parseFloat(settings.discount_min_order || 0) > 0 ? '' : 'hidden' %>">
+                                            on orders above ₹<span id="preview-minorder-val">
+                                                <%= settings.discount_min_order || 0 %>
+                                            </span>
+                                        </span>.
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- ── Save Button ── -->
+                            <button onclick="saveSettings()"
+                                class="w-full bg-zinc-900 hover:bg-green-700 text-white py-4 rounded-2xl font-black text-base transition-all active:scale-95 shadow-lg">
+                                Save All Settings
+                            </button>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+        <!-- Delete Category Modal -->
+        <div id="deleteCatModal"
+            class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4">
+            <div class="bg-white rounded-3xl shadow-2xl w-full max-w-sm p-8 text-center">
+                <div class="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </div>
+                <h2 class="text-xl font-black text-zinc-900 mb-2">Delete Category?</h2>
+                <p class="text-zinc-400 text-sm mb-1">Products here will move to <strong>All Products</strong>.</p>
+                <p class="text-zinc-400 text-sm mb-6">This cannot be undone.</p>
+                <input type="hidden" id="deleteCatId">
+                <div class="flex gap-3">
+                    <button onclick="closeCatDeleteModal()"
+                        class="flex-1 py-3 rounded-xl border border-zinc-200 font-bold text-zinc-600 hover:bg-zinc-50">Cancel</button>
+                    <button onclick="confirmCatDelete()"
+                        class="flex-1 py-3 rounded-xl bg-red-500 hover:bg-red-600 text-white font-black active:scale-95">Yes,
+                        Delete</button>
+                </div>
+            </div>
+        </div>
+
+        <script src="/javascript/index.js"></script>
+        <script>
+            // ── Tab switching ──────────────────────────────
+            function switchTab(name) {
+                document.querySelectorAll(".tab-panel").forEach(p => p.classList.add("hidden"));
+                document.getElementById(`tab-${name}`).classList.remove("hidden");
+
+                document.querySelectorAll(".sidebar-tab").forEach(btn => {
+                    btn.classList.remove("bg-zinc-900", "text-white");
+                    btn.classList.add("text-zinc-600", "hover:bg-zinc-50");
+                });
+                document.getElementById(`tab-btn-${name}`).classList.add("bg-zinc-900", "text-white");
+                document.getElementById(`tab-btn-${name}`).classList.remove("text-zinc-600", "hover:bg-zinc-50");
+
+                if (name === "categories") loadCategoryCounts();
+            }
+
+            // ── Image preview ──────────────────────────────
+            document.getElementById("imageInput").addEventListener("change", function () {
+                const preview = document.getElementById("imagePreview");
+                if (this.files[0]) {
+                    preview.src = URL.createObjectURL(this.files[0]);
+                    preview.classList.remove("hidden");
+                }
+            });
+
+            // ── Variant rows ───────────────────────────────
+            function addVariantRow() {
+                const container = document.getElementById("variantsContainer");
+                const div = document.createElement("div");
+                div.className = "variant-row grid grid-cols-12 gap-3 p-4 items-center border-t border-zinc-100";
+                div.innerHTML = `
+                <div class="col-span-2">
+                    <input type="number" name="weightValue[]" placeholder="500" required min="0"
+                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                </div>
+                <div class="col-span-2">
+                    <select name="unit[]" class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold appearance-none cursor-pointer transition-all">
+                        <option value="ml">ml</option><option value="L">L</option>
+                        <option value="g">g</option><option value="kg">kg</option>
+                        <option value="pcs">pcs</option><option value="dozen">Dozen</option>
+                        <option value="pack">Pack</option><option value="bottle">Bottle</option>
+                        <option value="box">Box</option><option value="pouch">Pouch</option>
+                    </select>
+                </div>
+                <div class="col-span-2">
+                    <input type="number" name="price[]" placeholder="0" required min="0"
+                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                </div>
+                <div class="col-span-2">
+                    <input type="number" name="mrp[]" placeholder="0" min="0"
+                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                </div>
+                <div class="col-span-3">
+                    <input type="number" name="stock[]" placeholder="0" min="0"
+                        class="w-full bg-white border border-zinc-200 p-3 rounded-xl focus:outline-none focus:border-green-500 text-sm font-bold transition-all">
+                </div>
+                <div class="col-span-1 flex justify-center">
+                    <button type="button" onclick="removeVariantRow(this)"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg bg-red-50 text-red-400 hover:bg-red-100 transition-all">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>`;
+                container.appendChild(div);
+            }
+
+            function removeVariantRow(btn) {
+                const rows = document.querySelectorAll(".variant-row");
+                if (rows.length > 1) btn.closest(".variant-row").remove();
+            }
+
+            // ── Category: counts ───────────────────────────
+            async function loadCategoryCounts() {
+                try {
+                    const res = await fetch("/admin/categories/counts");
+                    const data = await res.json();
+                    Object.entries(data.counts).forEach(([id, count]) => {
+                        const el = document.getElementById(`cat-count-${id}`);
+                        if (el) el.textContent = `${count} product${count !== 1 ? "s" : ""}`;
+                    });
+                } catch (e) { console.error(e); }
+            }
+
+            // ── Category: add ──────────────────────────────
+            async function addCategory() {
+                const name = document.getElementById("newCatName").value.trim();
+                if (!name) { showToast("Enter a category name.", "red"); return; }
+
+                try {
+                    const res = await fetch("/admin/categories/add", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name }),
+                    });
+                    const data = await res.json();
+                    if (!res.ok) { showToast(data.error, "red"); return; }
+
+                    // Inject row
+                    const list = document.getElementById("categoriesList");
+                    const div = document.createElement("div");
+                    div.className = "category-row group flex items-center gap-3 p-4 bg-zinc-50 hover:bg-zinc-100 rounded-xl border border-zinc-100 transition-all";
+                    div.setAttribute("data-id", data.category.id);
+                    div.setAttribute("data-slug", data.category.slug);
+                    div.innerHTML = `
+                    <div class="w-8 h-8 bg-white border border-zinc-200 rounded-lg flex items-center justify-center shrink-0">
+                        <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-5 5a2 2 0 01-2.828 0l-7-7A2 2 0 013 9.172V5a2 2 0 012-2z"/>
+                        </svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <input type="text"
+                            class="cat-name-input w-full bg-transparent font-bold text-sm text-zinc-800 border border-transparent rounded-lg px-2 py-1 focus:outline-none focus:bg-white focus:border-green-500 transition-all cursor-pointer hover:border-zinc-200"
+                            value="${data.category.name}" data-original="${data.category.name}"
+                            onchange="renameCategory(this)" title="Click to rename">
+                        <p class="text-[10px] text-zinc-400 font-mono px-2">slug: ${data.category.slug}</p>
+                    </div>
+                    <span class="text-[10px] font-black text-zinc-400 bg-zinc-100 px-2.5 py-1 rounded-lg shrink-0" id="cat-count-${data.category.id}">0 products</span>
+                    <button onclick="deleteCategory(this)"
+                        class="w-8 h-8 flex items-center justify-center rounded-lg text-zinc-300 hover:bg-red-50 hover:text-red-400 transition-all shrink-0 opacity-0 group-hover:opacity-100">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>`;
+                    div.style.opacity = "0";
+                    list.appendChild(div);
+                    requestAnimationFrame(() => { div.style.transition = "opacity 0.3s"; div.style.opacity = "1"; });
+
+                    document.getElementById("newCatName").value = "";
+                    showToast(`"${name}" category added!`, "green");
+                } catch (e) { showToast("Server error.", "red"); }
+            }
+
+            // ── Category: rename ───────────────────────────
+            async function renameCategory(input) {
+                const row = input.closest(".category-row");
+                const id = row.getAttribute("data-id");
+                const newName = input.value.trim();
+                const original = input.getAttribute("data-original");
+                if (!newName || newName === original) { input.value = original; return; }
+
+                try {
+                    const res = await fetch(`/admin/categories/rename/${id}`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ name: newName }),
+                    });
+                    const data = await res.json();
+                    if (res.ok) { input.setAttribute("data-original", newName); showToast("Renamed!", "green"); }
+                    else { input.value = original; showToast(data.error || "Failed.", "red"); }
+                } catch (e) { input.value = original; showToast("Server error.", "red"); }
+            }
+
+            // ── Category: delete ───────────────────────────
+            function deleteCategory(btn) {
+                const row = btn.closest(".category-row");
+                document.getElementById("deleteCatId").value = row.getAttribute("data-id");
+                const modal = document.getElementById("deleteCatModal");
+                modal.classList.remove("hidden");
+                modal.classList.add("flex");
+            }
+
+            function closeCatDeleteModal() {
+                const modal = document.getElementById("deleteCatModal");
+                modal.classList.add("hidden");
+                modal.classList.remove("flex");
+            }
+
+            async function confirmCatDelete() {
+                const id = document.getElementById("deleteCatId").value;
+                closeCatDeleteModal();
+                try {
+                    const res = await fetch(`/admin/categories/${id}`, { method: "DELETE" });
+                    const data = await res.json();
+                    if (res.ok) {
+                        const row = document.querySelector(`.category-row[data-id="${id}"]`);
+                        if (row) { row.style.transition = "all 0.25s"; row.style.opacity = "0"; setTimeout(() => row.remove(), 250); }
+                        showToast("Category deleted.", "green");
+                    } else { showToast(data.error || "Failed.", "red"); }
+                } catch (e) { showToast("Server error.", "red"); }
+            }
+
+            // ── Settings tab ──────────────────────────────────────────────
+
+            // Discount type radio toggle
+            document.querySelectorAll('input[name="discount_type"]').forEach(radio => {
+                radio.addEventListener("change", function () {
+                    const type = this.value;
+                    const fields = document.getElementById("discountFields");
+                    const prefix = document.getElementById("discountPrefix");
+                    const label = document.getElementById("discountValueLabel");
+                    const previewDiscount = document.getElementById("preview-discount");
+                    const val = document.getElementById("setting-discount_value")?.value || 0;
+
+                    // Update card styles
+                    document.querySelectorAll(".discount-type-option div").forEach(div => {
+                        div.classList.remove("border-zinc-900", "bg-zinc-900", "border-green-600", "bg-green-600", "text-white");
+                        div.classList.add("border-zinc-200", "bg-zinc-50", "text-zinc-600");
+                    });
+                    const activeDiv = this.closest(".discount-type-option").querySelector("div");
+                    if (type === "none") {
+                        activeDiv.classList.add("border-zinc-900", "bg-zinc-900", "text-white");
+                        activeDiv.classList.remove("border-zinc-200", "bg-zinc-50", "text-zinc-600");
+                    } else {
+                        activeDiv.classList.add("border-green-600", "bg-green-600", "text-white");
+                        activeDiv.classList.remove("border-zinc-200", "bg-zinc-50", "text-zinc-600");
+                    }
+
+                    if (type === "none") {
+                        fields.classList.add("hidden");
+                    } else {
+                        fields.classList.remove("hidden");
+                        if (prefix) prefix.textContent = type === "percentage" ? "%" : "₹";
+                        if (label) label.textContent = `Discount Value (${type === "percentage" ? "%" : "₹"})`;
+                        if (previewDiscount) previewDiscount.textContent = type === "percentage" ? `${val}%` : `₹${val}`;
+                    }
+                });
+            });
+
+            // Live preview updates
+            document.getElementById("setting-shipping_cost")?.addEventListener("input", function () {
+                document.getElementById("preview-shipping").textContent = this.value || 0;
+            });
+            document.getElementById("setting-free_shipping_above")?.addEventListener("input", function () {
+                document.querySelectorAll("#preview-free-above, #preview-free-above-2").forEach(el => el.textContent = this.value || 0);
+            });
+            document.getElementById("setting-discount_code")?.addEventListener("input", function () {
+                const el = document.getElementById("preview-code");
+                if (el) el.textContent = this.value || "CODE";
+            });
+            document.getElementById("setting-discount_value")?.addEventListener("input", function () {
+                const type = document.querySelector('input[name="discount_type"]:checked')?.value;
+                const el = document.getElementById("preview-discount");
+                if (el) el.textContent = type === "percentage" ? `${this.value}%` : `₹${this.value}`;
+            });
+            document.getElementById("setting-discount_min_order")?.addEventListener("input", function () {
+                const val = parseFloat(this.value) || 0;
+                const row = document.getElementById("preview-minorder");
+                const valEl = document.getElementById("preview-minorder-val");
+                if (row) val > 0 ? row.classList.remove("hidden") : row.classList.add("hidden");
+                if (valEl) valEl.textContent = val;
+            });
+
+            async function saveSettings() {
+                const discountType = document.querySelector('input[name="discount_type"]:checked')?.value || "none";
+
+                const payload = {
+                    shipping_cost: document.getElementById("setting-shipping_cost")?.value || 0,
+                    free_shipping_above: document.getElementById("setting-free_shipping_above")?.value || 0,
+                    minimum_order_value: document.getElementById("setting-minimum_order_value")?.value || 0,
+                    discount_type: discountType,
+                    discount_value: document.getElementById("setting-discount_value")?.value || 0,
+                    discount_code: document.getElementById("setting-discount_code")?.value || "",
+                    discount_min_order: document.getElementById("setting-discount_min_order")?.value || 0,
+                    discount_expiry: document.getElementById("setting-discount_expiry")?.value || "",
+                };
+
+                const saveBtn = document.querySelector('[onclick="saveSettings()"]');
+                if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = "Saving..."; }
+
+                try {
+                    const res = await fetch("/admin/settings/save", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify(payload),
+                    });
+                    const data = await res.json();
+                    if (res.ok) {
+                        showToast("Settings saved successfully!", "green");
+                    } else {
+                        showToast(data.error || "Failed to save.", "red");
+                    }
+                } catch (e) {
+                    showToast("Server error.", "red");
+                } finally {
+                    if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = "Save All Settings"; }
+                }
+            }
+        </script>
+</body>
+
+</html>

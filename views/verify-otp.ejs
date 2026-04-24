@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Email | GardenRich</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-green-100 font-sans antialiased text-zinc-900">
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10">
+        <div class="absolute top-[-5%] right-[-5%] w-[35%] h-[35%] bg-green-100 rounded-full blur-[100px] opacity-40"></div>
+        <div class="absolute bottom-[5%] left-[-5%] w-[30%] h-[30%] bg-green-50 rounded-full blur-[80px] opacity-60"></div>
+    </div>
+
+    <div class="min-h-screen flex items-center justify-center py-12 px-4">
+        <div class="max-w-md w-full">
+
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-black text-zinc-900 tracking-tighter">
+                    Garden<span class="text-green-600">Rich</span>
+                </h1>
+                <p class="text-zinc-500 font-medium mt-2">Check your email for the code.</p>
+            </div>
+
+            <div class="bg-white/80 backdrop-blur-xl p-10 rounded-[2.5rem] shadow-2xl shadow-green-900/5 border border-white">
+
+                <!-- Icon -->
+                <div class="flex justify-center mb-6">
+                    <div class="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center">
+                        <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <h2 class="text-xl font-black text-zinc-900 text-center mb-1">Verify your email</h2>
+                <p class="text-sm text-zinc-500 font-medium text-center mb-6">
+                    We sent a 6-digit code to<br>
+                    <span class="font-black text-zinc-800"><%= email %></span>
+                </p>
+
+                <% if (locals.resent) { %>
+                <div class="flex items-center gap-2 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-2xl text-sm font-medium mb-4">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    </svg>
+                    A new code has been sent to your email.
+                </div>
+                <% } %>
+
+                <% if (error) { %>
+                <div class="flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-2xl text-sm font-medium mb-4">
+                    <svg class="w-5 h-5 shrink-0 mt-0.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+                    </svg>
+                    <%= error %>
+                </div>
+                <% } %>
+
+                <!-- OTP Form -->
+                <form action="/verify-otp" method="POST">
+                    <div class="mb-5">
+                        <label class="block text-xs font-black uppercase tracking-widest text-zinc-400 mb-2 ml-1">Verification Code</label>
+                        <input
+                            type="text"
+                            name="otp"
+                            inputmode="numeric"
+                            autocomplete="one-time-code"
+                            maxlength="6"
+                            placeholder="000000"
+                            required
+                            autofocus
+                            class="w-full bg-zinc-50 border border-zinc-200 px-5 py-4 rounded-2xl outline-none transition-all focus:bg-white focus:border-green-500 focus:ring-4 focus:ring-green-500/10 text-zinc-800 font-black text-3xl tracking-[0.5em] text-center">
+                    </div>
+
+                    <!-- Countdown timer -->
+                    <p class="text-center text-xs text-zinc-400 font-medium mb-5">
+                        Code expires in <span id="countdown" class="font-black text-zinc-700">10:00</span>
+                    </p>
+
+                    <button type="submit"
+                        class="w-full bg-zinc-900 text-white py-4 rounded-2xl font-bold text-base hover:bg-green-700 transition-all shadow-xl shadow-zinc-200 active:scale-[0.98]">
+                        Verify & Create Account
+                    </button>
+                </form>
+
+                <div class="mt-5 pt-5 border-t border-zinc-100 flex items-center justify-between text-sm">
+                    <a href="/signup" class="font-bold text-zinc-400 hover:text-zinc-600 transition-colors">← Back to Signup</a>
+                    <form action="/resend-otp" method="POST">
+                        <button type="submit" class="font-black text-green-700 hover:text-green-800 transition-colors">
+                            Resend code
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Countdown timer — 10 minutes
+        let seconds = 600;
+        const el = document.getElementById("countdown");
+        const timer = setInterval(() => {
+            seconds--;
+            const m = Math.floor(seconds / 60).toString().padStart(2, "0");
+            const s = (seconds % 60).toString().padStart(2, "0");
+            el.textContent = `${m}:${s}`;
+            if (seconds <= 60) el.classList.add("text-red-500");
+            if (seconds <= 0) {
+                clearInterval(timer);
+                el.textContent = "Expired";
+                el.classList.add("text-red-500");
+            }
+        }, 1000);
+
+        // Auto-submit when 6 digits entered
+        document.querySelector('input[name="otp"]').addEventListener("input", function () {
+            if (this.value.length === 6) {
+                this.closest("form").submit();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders | GardenRich</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-zinc-50 font-sans antialiased text-zinc-900">
+    <%- include("partials/header") %>
+
+    <div class="max-w-2xl mx-auto py-12 px-4 pb-24">
+
+        <div class="mb-8">
+            <a href="/" class="inline-flex items-center text-sm font-bold text-zinc-400 hover:text-green-600 transition-colors mb-4">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                Back to Shop
+            </a>
+            <h1 class="font-extrabold text-3xl tracking-tight text-zinc-900">My Orders</h1>
+            <p class="text-zinc-400 font-medium mt-1"><%= orders.length %> order<%= orders.length !== 1 ? 's' : '' %> placed</p>
+        </div>
+
+        <% if (orders.length > 0) { %>
+
+        <div id="ordersList" class="space-y-3">
+            <% orders.forEach((order, index) => { %>
+            <a href="/my-orders/<%= order.id %>"
+                class="order-item block bg-white rounded-2xl border border-zinc-100 shadow-sm hover:shadow-md active:scale-[0.99] transition-all p-4 <%= index >= 5 ? 'hidden' : '' %>">
+
+                <!-- Top row: status · date   ·   total → -->
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+
+                        <% if (order.status === 'delivered') { %>
+                        <span class="flex items-center gap-1 text-xs font-black text-green-600">
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Delivered
+                        </span>
+                        <% } else if (order.status === 'cancelled') { %>
+                        <span class="flex items-center gap-1 text-xs font-black text-red-500">
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                            </svg>
+                            Cancelled
+                        </span>
+                        <% } else if (order.status === 'shipped') { %>
+                        <span class="flex items-center gap-1 text-xs font-black text-purple-600">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
+                            </svg>
+                            Out for Delivery
+                        </span>
+                        <% } else if (order.status === 'confirmed') { %>
+                        <span class="flex items-center gap-1 text-xs font-black text-blue-600">
+                            <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                            </svg>
+                            Confirmed
+                        </span>
+                        <% } else { %>
+                        <span class="flex items-center gap-1 text-xs font-black text-yellow-600">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            Pending
+                        </span>
+                        <% } %>
+
+                        <span class="text-zinc-200 text-xs">·</span>
+                        <span class="text-xs text-zinc-400 font-medium"><%= toISTDisplay(order.created_at) %></span>
+                    </div>
+
+                    <!-- Total + arrow -->
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <span class="font-black text-zinc-900 text-sm">Rs. <%= order.total.toLocaleString('en-IN') %></span>
+                        <svg class="w-4 h-4 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Product images row -->
+                <div class="flex gap-2">
+                    <% order.order_items.slice(0, 4).forEach((item) => { %>
+                    <div class="w-16 h-16 rounded-xl overflow-hidden bg-zinc-100 shrink-0 border border-zinc-100">
+                        <% if (item.product_image) { %>
+                        <img src="<%= item.product_image %>" class="w-full h-full object-cover" loading="lazy">
+                        <% } else { %>
+                        <div class="w-full h-full flex items-center justify-center">
+                            <svg class="w-6 h-6 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                            </svg>
+                        </div>
+                        <% } %>
+                    </div>
+                    <% }) %>
+
+                    <% if (order.order_items.length > 4) { %>
+                    <div class="w-16 h-16 rounded-xl bg-zinc-100 border border-zinc-100 flex flex-col items-center justify-center shrink-0">
+                        <span class="text-sm font-black text-zinc-600">+<%= order.order_items.length - 4 %></span>
+                        <span class="text-[10px] font-bold text-zinc-400">more</span>
+                    </div>
+                    <% } %>
+
+                    <% if (order.order_items.length === 0) { %>
+                    <div class="flex items-center">
+                        <p class="text-xs text-zinc-400 italic">Item details unavailable</p>
+                    </div>
+                    <% } %>
+                </div>
+
+            </a>
+            <% }) %>
+        </div>
+
+        <!-- Load More Button -->
+        <% if (orders.length > 5) { %>
+        <div class="text-center mt-6" id="loadMoreContainer">
+            <button onclick="loadMore()" id="loadMoreBtn"
+                class="inline-flex items-center gap-2 px-8 py-3 bg-white border border-zinc-200 rounded-2xl font-bold text-zinc-600 hover:bg-zinc-50 hover:border-zinc-300 transition-all shadow-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
+                Load More
+            </button>
+        </div>
+        <% } %>
+
+        <% } else { %>
+        <div class="bg-white rounded-3xl border border-dashed border-zinc-200 p-20 text-center">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-green-50 rounded-full mb-6">
+                <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                </svg>
+            </div>
+            <h2 class="text-2xl font-black text-zinc-900 mb-2">No orders yet</h2>
+            <p class="text-zinc-400 font-medium mb-8">You haven't placed any orders yet. Start shopping!</p>
+            <a href="/" class="inline-block bg-green-600 hover:bg-green-700 text-white font-black py-4 px-10 rounded-2xl uppercase tracking-widest transition-all active:scale-95">
+                Shop Now
+            </a>
+        </div>
+        <% } %>
+
+    </div>
+
+    <%- include("partials/footer") %>
+
+    <script>
+        let visibleCount = 5;
+        const batchSize = 5;
+
+        function loadMore() {
+            const items = document.querySelectorAll(".order-item");
+            let newlyShown = 0;
+            for (let i = visibleCount; i < visibleCount + batchSize && i < items.length; i++) {
+                items[i].classList.remove("hidden");
+                newlyShown++;
+            }
+            visibleCount += newlyShown;
+            if (visibleCount >= items.length) {
+                document.getElementById("loadMoreContainer").classList.add("hidden");
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Checkout | GardenRich</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="bg-zinc-50 font-sans antialiased text-zinc-900">
+    <%- include("partials/header") %>
+
+    <%
+        const _shippingCost = parseFloat(shippingCost || 0);
+        const _subtotal = parseFloat(subtotal || 0);
+        const _minOrder = parseFloat(minOrder || 0);
+        const _freeAbove = parseFloat(settingsMap && settingsMap.free_shipping_above || 0);
+        const _isFreeShipping = _shippingCost === 0;
+        // Pre-applied discount from cart page
+        const _preCode = preAppliedCode || "";
+        const _preDiscount = parseFloat(preAppliedDiscount || 0);
+        // Total already accounts for discount (calculated server-side)
+        const _total = parseFloat(total || 0);
+    %>
+
+    <div class="max-w-7xl mx-auto py-12 px-6 lg:px-8 pb-24">
+
+        <!-- Minimum order block -->
+        <% if (_minOrder > 0 && _subtotal < _minOrder) { %>
+        <div class="mb-8 bg-orange-50 border border-orange-200 rounded-2xl px-6 py-4 flex items-center gap-3">
+            <svg class="w-6 h-6 text-orange-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+            </svg>
+            <div>
+                <p class="font-black text-orange-800">Minimum order not met</p>
+                <p class="text-sm text-orange-700">You need a minimum cart value of <strong>Rs. <%= _minOrder.toLocaleString('en-IN') %></strong> to place an order. <a href="/cart" class="underline font-bold">Go back to cart</a></p>
+            </div>
+        </div>
+        <% } %>
+
+        <div class="flex flex-col lg:flex-row gap-12">
+
+            <form id="checkoutForm" action="/checkout" method="POST" class="flex-1 space-y-8">
+
+                <!-- Hidden fields — discount & shipping passed to server -->
+                <input type="hidden" name="discount_amount" id="hdnDiscountAmount" value="<%= _preDiscount %>">
+                <input type="hidden" name="shipping_cost" id="hdnShippingCost" value="<%= _shippingCost %>">
+
+                <!-- Step 1: Contact Information -->
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-zinc-100">
+                    <div class="flex items-center mb-6">
+                        <span class="w-8 h-8 bg-zinc-900 text-white rounded-full flex items-center justify-center font-bold mr-3 text-sm">1</span>
+                        <h2 class="text-xl font-bold">Contact Information</h2>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <input type="email" name="email" placeholder="Email Address" required
+                            value="<%= user?.email || '' %>"
+                            class="w-full p-4 rounded-xl border border-zinc-200 focus:border-green-600 outline-none transition-all font-medium">
+                        <input type="tel" name="phone" placeholder="Phone Number" required
+                            class="w-full p-4 rounded-xl border border-zinc-200 focus:border-green-600 outline-none transition-all font-medium">
+                    </div>
+                </div>
+
+                <!-- Step 2: Shipping Address -->
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-zinc-100">
+                    <div class="flex items-center justify-between mb-6">
+                        <div class="flex items-center">
+                            <span class="w-8 h-8 bg-zinc-900 text-white rounded-full flex items-center justify-center font-bold mr-3 text-sm">2</span>
+                            <h2 class="text-xl font-bold">Shipping Address</h2>
+                        </div>
+                        <% if (addresses.length > 0) { %>
+                        <button type="button" onclick="showNewAddressForm()" id="addNewBtn"
+                            class="text-sm font-bold text-green-600 hover:text-green-700 underline underline-offset-2">
+                            + Add New Address
+                        </button>
+                        <% } %>
+                    </div>
+
+                    <% if (addresses.length > 0) { %>
+                    <div id="savedAddresses" class="space-y-3 mb-4">
+                        <% addresses.forEach((addr, index) => { %>
+                        <label class="flex items-start gap-3 p-4 rounded-xl border-2 cursor-pointer transition-all <%= index === 0 ? 'border-green-600 bg-green-50' : 'border-zinc-200 bg-white' %>"
+                            onclick="selectAddress(this)">
+                            <input type="radio" name="selected_address" value="<%= addr.id %>"
+                                <%= index === 0 ? 'checked' : '' %>
+                                class="mt-1 w-4 h-4 accent-green-600">
+                            <div class="text-sm">
+                                <p class="font-bold text-zinc-800"><%= addr.first_name %> <%= addr.last_name %></p>
+                                <p class="text-zinc-500"><%= addr.address %></p>
+                                <p class="text-zinc-500"><%= addr.city %> — <%= addr.pin_code %></p>
+                                <p class="text-zinc-500"><%= addr.phone %></p>
+                            </div>
+                        </label>
+                        <% }) %>
+                    </div>
+                    <% } %>
+
+                    <div id="newAddressForm" class="space-y-4 <%= addresses.length > 0 ? 'hidden' : '' %>">
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="text" name="first_name" placeholder="First Name"
+                                class="p-4 rounded-xl border border-zinc-200 outline-none focus:border-green-600 transition-all font-medium">
+                            <input type="text" name="last_name" placeholder="Last Name"
+                                class="p-4 rounded-xl border border-zinc-200 outline-none focus:border-green-600 transition-all font-medium">
+                        </div>
+                        <input type="tel" name="address_phone" placeholder="Phone Number"
+                            class="w-full p-4 rounded-xl border border-zinc-200 outline-none focus:border-green-600 transition-all font-medium">
+                        <input type="text" name="address" placeholder="Address (House No, Building, Street)"
+                            class="w-full p-4 rounded-xl border border-zinc-200 outline-none focus:border-green-600 transition-all font-medium">
+                        <div class="grid grid-cols-2 gap-4">
+                            <input type="text" name="city" placeholder="City"
+                                class="p-4 rounded-xl border border-zinc-200 outline-none focus:border-green-600 transition-all font-medium">
+                            <input type="text" name="pin_code" placeholder="PIN Code"
+                                class="p-4 rounded-xl border border-zinc-200 outline-none focus:border-green-600 transition-all font-medium">
+                        </div>
+                        <% if (addresses.length > 0) { %>
+                        <button type="button" onclick="cancelNewAddress()"
+                            class="text-sm font-bold text-zinc-400 hover:text-zinc-600">
+                            ← Use Saved Address
+                        </button>
+                        <% } %>
+                    </div>
+                </div>
+
+                <!-- Step 3: Payment Method -->
+                <div class="bg-white p-8 rounded-3xl shadow-sm border border-zinc-100">
+                    <div class="flex items-center mb-6">
+                        <span class="w-8 h-8 bg-zinc-900 text-white rounded-full flex items-center justify-center font-bold mr-3 text-sm">3</span>
+                        <h2 class="text-xl font-bold">Payment Method</h2>
+                    </div>
+                    <div class="space-y-3">
+                        <label class="flex items-center p-4 rounded-xl border border-zinc-100 bg-zinc-100 opacity-50 cursor-not-allowed">
+                            <input type="radio" name="payment" disabled class="w-4 h-4 accent-green-600">
+                            <div class="ml-3">
+                                <span class="font-bold text-zinc-700 block">Online Payment</span>
+                                <span class="text-xs text-zinc-400">Coming Soon</span>
+                            </div>
+                        </label>
+                        <label class="flex items-center p-4 rounded-xl border-2 border-green-600 bg-green-50 cursor-pointer">
+                            <input type="radio" name="payment" value="cod" checked class="w-4 h-4 accent-green-600">
+                            <div class="ml-3">
+                                <span class="font-bold text-green-900 block">Cash On Delivery</span>
+                                <span class="text-xs text-green-700">Pay when your order arrives</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <% if (_minOrder > 0 && _subtotal < _minOrder) { %>
+                <button type="button" disabled
+                    class="w-full py-4 bg-zinc-300 text-zinc-500 font-black rounded-2xl cursor-not-allowed uppercase tracking-widest">
+                    Min. Order Rs. <%= _minOrder.toLocaleString('en-IN') %> Required
+                </button>
+                <% } else { %>
+                <button type="submit" id="placeOrderBtn"
+                    class="w-full py-4 bg-green-600 hover:bg-green-700 text-white font-black rounded-2xl shadow-lg transition-all active:scale-95 uppercase tracking-widest">
+                    Place Order Now →
+                </button>
+                <% } %>
+
+            </form>
+
+            <!-- Order Review Panel -->
+            <div class="lg:w-96">
+                <div class="bg-white p-6 rounded-3xl shadow-sm border border-zinc-100 sticky top-24">
+                    <h2 class="text-xs font-black uppercase tracking-widest text-zinc-400 mb-5 pb-4 border-b border-zinc-100">
+                        Order Review (<%= cartItems.length %> items)
+                    </h2>
+
+                    <!-- Items list -->
+                    <div class="space-y-4 mb-6">
+                        <% cartItems.forEach(item => { %>
+                        <div class="flex gap-3 items-center">
+                            <div class="w-14 h-14 bg-zinc-100 rounded-xl overflow-hidden shrink-0">
+                                <img src="<%= item.product_image %>" class="w-full h-full object-cover">
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <h4 class="text-sm font-bold text-zinc-800 leading-tight truncate"><%= item.product_name %></h4>
+                                <p class="text-[10px] text-zinc-400 font-bold mt-0.5"><%= item.weight %></p>
+                                <p class="text-[10px] text-zinc-400 font-bold">Qty: <%= item.quantity %></p>
+                            </div>
+                            <span class="text-sm font-black text-zinc-900 shrink-0">
+                                Rs. <%= (item.price * item.quantity).toLocaleString('en-IN') %>
+                            </span>
+                        </div>
+                        <% }) %>
+                    </div>
+
+                    <!-- Price breakdown -->
+                    <div class="border-t border-zinc-100 pt-4 space-y-2.5 text-sm">
+                        <div class="flex justify-between text-zinc-500 font-medium">
+                            <span>Subtotal</span>
+                            <span>Rs. <%= _subtotal.toLocaleString('en-IN') %></span>
+                        </div>
+
+                        <%# ── Promo code section ──
+                            If discount was applied in cart, show it as already applied (no duplicate input).
+                            If not, show the input so user can apply one here. %>
+
+                        <% if (_preDiscount > 0 && _preCode) { %>
+                        <%# Discount carried over from cart — already applied, just show it %>
+                        <div class="py-1">
+                            <div class="flex items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2.5">
+                                <div>
+                                    <p class="text-xs font-black text-green-700">Code Applied 🎉</p>
+                                    <p class="text-[10px] text-green-600 mt-0.5">
+                                        <span class="font-black"><%= _preCode %></span> — Rs. <%= _preDiscount.toLocaleString('en-IN') %> off
+                                    </p>
+                                </div>
+                                <a href="/cart" class="text-[10px] text-zinc-400 hover:text-red-400 underline transition-colors ml-3 shrink-0">
+                                    Change
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="flex justify-between text-green-600 font-medium">
+                            <span>Discount</span>
+                            <span class="font-black">-Rs. <%= _preDiscount.toLocaleString('en-IN') %></span>
+                        </div>
+
+                        <% } else { %>
+                        <%# No discount from cart — allow applying one here %>
+                        <div class="py-1">
+                            <div id="coDiscountInputRow" class="flex gap-2">
+                                <input type="text" id="coDiscountCode" placeholder="Promo code"
+                                    class="flex-1 bg-zinc-50 border border-zinc-200 p-2.5 rounded-xl text-xs font-bold uppercase focus:outline-none focus:border-green-500 transition-all tracking-widest"
+                                    oninput="this.value = this.value.toUpperCase()">
+                                <button onclick="applyCheckoutDiscount()"
+                                    class="px-3 py-2.5 bg-zinc-900 hover:bg-green-700 text-white text-xs font-black rounded-xl transition-all active:scale-95">
+                                    Apply
+                                </button>
+                            </div>
+                            <div id="coDiscountMsg" class="mt-1.5 text-xs font-bold hidden"></div>
+                            <div id="coDiscountApplied" class="hidden items-center justify-between bg-green-50 border border-green-200 rounded-xl px-3 py-2 mt-2">
+                                <div>
+                                    <p class="text-xs font-black text-green-700">Code Applied 🎉</p>
+                                    <p class="text-[10px] text-green-600 mt-0.5" id="coDiscountLabel"></p>
+                                </div>
+                                <button onclick="removeCheckoutDiscount()" class="text-zinc-400 hover:text-red-400 ml-2">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div id="coDiscountRow" class="hidden justify-between text-green-600 font-medium">
+                            <span>Discount</span>
+                            <span id="coDiscountAmt" class="font-black">-Rs. 0</span>
+                        </div>
+                        <% } %>
+
+                        <div class="flex justify-between text-zinc-500 font-medium">
+                            <span>Shipping</span>
+                            <span class="font-black <%= _isFreeShipping ? 'text-green-600' : 'text-zinc-900' %>">
+                                <% if (_isFreeShipping) { %>FREE<% } else { %>Rs. <%= _shippingCost.toLocaleString('en-IN') %><% } %>
+                            </span>
+                        </div>
+                        <div class="flex justify-between text-zinc-500 font-medium">
+                            <span>Taxes</span>
+                            <span>Included</span>
+                        </div>
+                        <div class="flex justify-between pt-3 border-t border-zinc-100">
+                            <span class="font-black text-zinc-900">To Pay</span>
+                            <span id="coTotal" class="text-xl font-black text-green-700">
+                                Rs. <%= _total.toLocaleString('en-IN') %>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <%- include("partials/footer") %>
+
+    <script>
+        const SHIPPING_COST = <%= _shippingCost %>;
+        const SUBTOTAL = <%= _subtotal %>;
+        const MIN_ORDER = <%= _minOrder %>;
+        const FREE_ABOVE = <%= _freeAbove %>;
+        const PRE_DISCOUNT = <%= _preDiscount %>; // already applied from cart
+        let checkoutDiscount = PRE_DISCOUNT;      // start with pre-applied value
+
+        // Sync hidden fields before submit
+        document.getElementById("checkoutForm").addEventListener("submit", function(e) {
+            if (<%= cartItems.length %> === 0) {
+                e.preventDefault();
+                alert("Your cart is empty.");
+                window.location.href = "/";
+                return;
+            }
+            document.getElementById("hdnDiscountAmount").value = checkoutDiscount;
+            document.getElementById("hdnShippingCost").value = SHIPPING_COST;
+        });
+
+        // ── Discount code (only shown when no pre-applied discount) ──
+        async function applyCheckoutDiscount() {
+            const code = document.getElementById("coDiscountCode")?.value.trim();
+            const msg = document.getElementById("coDiscountMsg");
+            if (!code) return;
+
+            try {
+                const res = await fetch("/apply-discount", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ code, orderTotal: SUBTOTAL }),
+                });
+                const data = await res.json();
+
+                if (!res.ok) {
+                    msg.textContent = data.error;
+                    msg.className = "mt-1.5 text-xs font-bold text-red-500";
+                    msg.classList.remove("hidden");
+                    return;
+                }
+
+                checkoutDiscount = data.discountAmount;
+                msg.classList.add("hidden");
+                document.getElementById("coDiscountInputRow").classList.add("hidden");
+                document.getElementById("coDiscountApplied").classList.remove("hidden");
+                document.getElementById("coDiscountApplied").classList.add("flex");
+                document.getElementById("coDiscountLabel").textContent =
+                    data.discountType === "percentage"
+                        ? `${data.discountValue}% off applied`
+                        : `Rs. ${data.discountAmount} off applied`;
+
+                document.getElementById("coDiscountRow").classList.remove("hidden");
+                document.getElementById("coDiscountRow").classList.add("flex");
+                document.getElementById("coDiscountAmt").textContent = `-Rs. ${data.discountAmount.toLocaleString("en-IN")}`;
+                document.getElementById("hdnDiscountAmount").value = checkoutDiscount;
+
+                recalcCheckoutTotal();
+            } catch (e) {
+                document.getElementById("coDiscountMsg").textContent = "Server error. Try again.";
+                document.getElementById("coDiscountMsg").className = "mt-1.5 text-xs font-bold text-red-500";
+                document.getElementById("coDiscountMsg").classList.remove("hidden");
+            }
+        }
+
+        function removeCheckoutDiscount() {
+            checkoutDiscount = 0;
+            document.getElementById("coDiscountCode").value = "";
+            document.getElementById("coDiscountInputRow").classList.remove("hidden");
+            document.getElementById("coDiscountApplied").classList.add("hidden");
+            document.getElementById("coDiscountApplied").classList.remove("flex");
+            document.getElementById("coDiscountRow").classList.add("hidden");
+            document.getElementById("coDiscountRow").classList.remove("flex");
+            document.getElementById("hdnDiscountAmount").value = 0;
+            recalcCheckoutTotal();
+        }
+
+        function recalcCheckoutTotal() {
+            const newTotal = Math.max(0, SUBTOTAL + SHIPPING_COST - checkoutDiscount);
+            document.getElementById("coTotal").textContent = "Rs. " + newTotal.toLocaleString("en-IN");
+        }
+
+        function selectAddress(label) {
+            document.querySelectorAll('[name="selected_address"]').forEach(r => {
+                r.closest('label').classList.remove('border-green-600', 'bg-green-50');
+                r.closest('label').classList.add('border-zinc-200', 'bg-white');
+            });
+            label.classList.add('border-green-600', 'bg-green-50');
+            label.classList.remove('border-zinc-200', 'bg-white');
+        }
+
+        function showNewAddressForm() {
+            document.getElementById('newAddressForm').classList.remove('hidden');
+            document.getElementById('savedAddresses').classList.add('hidden');
+            document.getElementById('addNewBtn').classList.add('hidden');
+        }
+
+        function cancelNewAddress() {
+            document.getElementById('newAddressForm').classList.add('hidden');
+            document.getElementById('savedAddresses').classList.remove('hidden');
+            document.getElementById('addNewBtn').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

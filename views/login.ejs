@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GardenRich</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+
+<body class="bg-green-100 font-sans antialiased text-zinc-900">
+    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-green-100 rounded-full blur-[120px] opacity-50"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-green-50 rounded-full blur-[120px] opacity-50"></div>
+    </div>
+
+    <div class="min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-md w-full">
+            
+            <div class="text-center mb-10">
+                <h1 class="text-4xl font-black text-zinc-900 tracking-tighter">
+                    Garden<span class="text-green-600">Rich</span>
+                </h1>
+                <p class="text-zinc-500 font-medium mt-2">Welcome back! Please enter your details.</p>
+            </div>
+
+            <div class="bg-white/80 backdrop-blur-xl p-10 rounded-[2.5rem] shadow-2xl shadow-green-900/5 border border-white">
+
+                <!-- Error Banner -->
+                <% if (locals.error) { %>
+                <div class="mb-6 flex items-start gap-3 bg-red-50 border border-red-200 text-red-700 px-4 py-4 rounded-2xl" role="alert">
+                    <svg class="w-5 h-5 mt-0.5 shrink-0 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+                    </svg>
+                    <div>
+                        <p class="font-bold text-sm">
+                            <% if (error === 'invalid_credentials') { %>
+                                Incorrect email or password
+                            <% } else if (error === 'user_not_found') { %>
+                                No account found with this email
+                            <% } else if (error === 'wrong_password') { %>
+                                Incorrect password. Please try again.
+                            <% } else if (error === 'account_disabled') { %>
+                                Your account has been disabled. Contact support.
+                            <% } else { %>
+                                Something went wrong. Please try again.
+                            <% } %>
+                        </p>
+                        <% if (error === 'invalid_credentials' || error === 'wrong_password') { %>
+                        <p class="text-xs mt-1 text-red-500 font-medium">
+                            Forgot your password? <a href="/forgot-password" class="underline font-bold hover:text-red-700">Reset it here</a>
+                        </p>
+                        <% } %>
+                    </div>
+                </div>
+                <% } %>
+
+                <form action="/login" method="POST" class="space-y-6">
+                    
+                    <div class="group">
+                        <label class="block text-xs font-black uppercase tracking-widest text-zinc-500 mb-2 ml-1">Email Address</label>
+                        <div class="relative">
+                            <input
+                                type="email"
+                                name="email"
+                                required
+                                placeholder="name@gmail.com"
+                                value="<%= locals.email || '' %>"
+                                class="w-full bg-zinc-50 border px-5 py-4 rounded-2xl outline-none transition-all focus:bg-white focus:ring-4 text-zinc-800 font-medium
+                                    <%= locals.error ? 'border-red-300 focus:border-red-400 focus:ring-red-500/10' : 'border-zinc-200 focus:border-green-500 focus:ring-green-500/10' %>">
+                        </div>
+                    </div>
+
+                    <div class="group">
+                        <div class="flex justify-between items-center mb-2 ml-1">
+                            <label class="block text-xs font-black uppercase tracking-widest text-zinc-500">Password</label>
+                            <a href="/forgot-password" class="text-xs font-bold text-green-700 hover:text-green-800">Forgot?</a>
+                        </div>
+                        <div class="relative">
+                            <input
+                                type="password"
+                                name="password"
+                                required
+                                placeholder="••••••••"
+                                id="passwordInput"
+                                class="w-full bg-zinc-50 border px-5 py-4 pr-14 rounded-2xl outline-none transition-all focus:bg-white focus:ring-4 text-zinc-800 font-medium
+                                    <%= locals.error ? 'border-red-300 focus:border-red-400 focus:ring-red-500/10' : 'border-zinc-200 focus:border-green-500 focus:ring-green-500/10' %>">
+                            <!-- Toggle password visibility -->
+                            <button type="button" onclick="togglePassword()" class="absolute right-5 top-1/2 -translate-y-1/2 text-zinc-300 hover:text-zinc-500 transition-colors">
+                                <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                </svg>
+                                <svg id="eyeOffIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.542 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <button type="submit" 
+                        class="w-full bg-zinc-900 text-white py-4 rounded-2xl font-bold text-lg hover:bg-green-700 transition-all shadow-xl shadow-zinc-200 active:scale-[0.98]">
+                        Log In
+                    </button>
+
+                    <div class="relative flex items-center py-2">
+                        <div class="flex-grow border-t border-zinc-100"></div>
+                        <span class="flex-shrink mx-4 text-zinc-400 text-xs font-bold uppercase tracking-widest">New to us?</span>
+                        <div class="flex-grow border-t border-zinc-100"></div>
+                    </div>
+
+                    <a href="/signup" 
+                        class="block w-full text-center border-2 border-zinc-300 text-zinc-800 py-3 rounded-2xl font-bold hover:bg-zinc-100 transition-all">
+                        Create an Account
+                    </a>
+                </form>
+            </div>
+
+            <p class="text-center mt-10 text-zinc-400 text-sm font-medium">
+                By signing in, you agree to our 
+                <a href="#" class="text-zinc-600 underline">Terms</a> and 
+                <a href="#" class="text-zinc-600 underline">Privacy</a>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const input = document.getElementById('passwordInput');
+            const eyeIcon = document.getElementById('eyeIcon');
+            const eyeOffIcon = document.getElementById('eyeOffIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                eyeIcon.classList.add('hidden');
+                eyeOffIcon.classList.remove('hidden');
+            } else {
+                input.type = 'password';
+                eyeIcon.classList.remove('hidden');
+                eyeOffIcon.classList.add('hidden');
+            }
+        }
+    </script>
+    <script src="/javascript/index.js"></script>
+</body>
+
+</html>

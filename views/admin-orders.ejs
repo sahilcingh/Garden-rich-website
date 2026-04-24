@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Orders | GardenRich</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-zinc-50 font-sans antialiased text-zinc-900">
+    <%- include("partials/header") %>
+
+    <div class="max-w-7xl mx-auto py-12 px-6 lg:px-8 pb-24">
+
+        <div class="mb-10">
+            <span class="text-green-600 font-bold tracking-widest text-xs uppercase">Admin Panel</span>
+            <h1 class="font-extrabold text-4xl mt-1 tracking-tight text-zinc-900">Orders Dashboard</h1>
+        </div>
+
+        <!-- Key Stats (always current month) -->
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
+            <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-yellow-50 rounded-xl flex items-center justify-center">
+                        <svg class="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <p class="text-xs font-black uppercase tracking-widest text-zinc-400">Today's Orders</p>
+                </div>
+                <p class="text-4xl font-black text-zinc-900"><%= todayOrders.length %></p>
+                <p class="text-sm font-bold text-zinc-400 mt-1">Orders placed today</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-green-50 rounded-xl flex items-center justify-center">
+                        <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <p class="text-xs font-black uppercase tracking-widest text-zinc-400">Today's Revenue</p>
+                </div>
+                <p class="text-4xl font-black text-green-700">Rs. <%= todayOrders.reduce((acc, o) => acc + o.total, 0).toLocaleString('en-IN') %></p>
+                <p class="text-sm font-bold text-zinc-400 mt-1">Collected today</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-blue-50 rounded-xl flex items-center justify-center">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                    </div>
+                    <p class="text-xs font-black uppercase tracking-widest text-zinc-400">This Month</p>
+                </div>
+                <p class="text-4xl font-black text-zinc-900"><%= thisMonthOrders %></p>
+                <p class="text-sm font-bold text-zinc-400 mt-1">Orders this month</p>
+            </div>
+            <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 bg-purple-50 rounded-xl flex items-center justify-center">
+                        <svg class="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+                    </div>
+                    <p class="text-xs font-black uppercase tracking-widest text-zinc-400">Month Revenue</p>
+                </div>
+                <p class="text-4xl font-black text-purple-700">Rs. <%= thisMonthRevenue.toLocaleString('en-IN') %></p>
+                <p class="text-sm font-bold text-zinc-400 mt-1">Revenue this month</p>
+            </div>
+        </div>
+
+        
+
+        <!-- ── Month Navigator ──────────────────────────────── -->
+        <%
+            const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+            const MONTH_SHORT = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+            const nowM = new Date(Date.now() + 330*60*1000);
+            const nowYear  = nowM.getUTCFullYear();
+            const nowMonth = nowM.getUTCMonth() + 1;
+
+            // Year range: first order year → current year
+            const allYears = Object.keys(monthlyStats).map(m => parseInt(m.split('-')[0]));
+            const minYear = allYears.length > 0 ? Math.min(...allYears) : nowYear;
+            const maxYear = nowYear;
+
+            // Months with data in selected year (as set)
+            const monthsWithData = new Set(
+                Object.keys(monthlyStats)
+                    .filter(m => m.startsWith(selectedYear + '-'))
+                    .map(m => parseInt(m.split('-')[1]))
+            );
+        %>
+        <div class="bg-white border border-zinc-100 rounded-2xl shadow-sm overflow-hidden mb-6">
+
+            <!-- Year navigator -->
+            <div class="flex items-center justify-between px-5 py-3 border-b border-zinc-50">
+                <% if (selectedYear > minYear) { %>
+                <a href="/admin/orders?year=<%= selectedYear - 1 %>&month=<%= selectedMonth %>&status=<%= statusFilter %>"
+                   class="w-9 h-9 flex items-center justify-center rounded-xl border border-zinc-200 hover:border-green-400 hover:bg-green-50 text-zinc-500 hover:text-green-700 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </a>
+                <% } else { %>
+                <span class="w-9 h-9 flex items-center justify-center rounded-xl border border-zinc-400 text-zinc-400 cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </span>
+                <% } %>
+
+                <div class="text-center">
+                    <p class="font-black text-zinc-900 text-xl tracking-tight"><%= selectedYear %></p>
+                    <p class="text-[10px] text-zinc-400 font-bold uppercase tracking-widest mt-0.5">Select a month below</p>
+                </div>
+
+                <% if (selectedYear < maxYear) { %>
+                <a href="/admin/orders?year=<%= selectedYear + 1 %>&month=<%= selectedMonth %>&status=<%= statusFilter %>"
+                   class="w-9 h-9 flex items-center justify-center rounded-xl border border-zinc-200 hover:border-green-400 hover:bg-green-50 text-zinc-500 hover:text-green-700 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+                <% } else { %>
+                <span class="w-9 h-9 flex items-center justify-center rounded-xl border border-zinc-400 text-zinc-400 cursor-not-allowed">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </span>
+                <% } %>
+            </div>
+
+            <!-- Month grid (3×4) -->
+            <div class="grid grid-cols-4 sm:grid-cols-6 gap-1.5 p-4">
+                <% for (let mo = 1; mo <= 12; mo++) {
+                    const isCurrent     = mo === selectedMonth && selectedYear === parseInt(selectedYear);
+                    const isSelected    = mo === selectedMonth;
+                    const hasData       = monthsWithData.has(mo);
+                    const isFutureMonth = selectedYear === nowYear && mo > nowMonth;
+                    const stat          = monthlyStats[selectedYear + '-' + String(mo).padStart(2,'0')];
+                %>
+                <% if (isFutureMonth) { %>
+                    <div class="flex flex-col items-center justify-center rounded-xl py-2.5 px-1 text-zinc-300 cursor-not-allowed select-none">
+                        <span class="text-xs font-black"><%= MONTH_SHORT[mo-1] %></span>
+                    </div>
+                <% } else { %>
+                    <a href="/admin/orders?year=<%= selectedYear %>&month=<%= mo %>&status=<%= statusFilter %>"
+                       class="flex flex-col items-center justify-center rounded-xl py-2.5 px-1 transition-all
+                           <%= isSelected
+                               ? 'bg-green-600 text-white shadow-md shadow-green-100'
+                               : hasData
+                                   ? 'bg-zinc-50 hover:bg-green-50 text-zinc-700 hover:text-green-700 border border-zinc-100 hover:border-green-200'
+                                   : 'text-zinc-400 hover:bg-zinc-100 border border-transparent hover:border-zinc-100' %>">
+                        <span class="text-xs font-black"><%= MONTH_SHORT[mo-1] %></span>
+                        <% if (stat) { %>
+                        <span class="text-[9px] font-bold mt-0.5 <%= isSelected ? 'text-green-100' : 'text-zinc-400' %>"><%= stat.count %> orders</span>
+                        <% } else { %>
+                        <span class="text-[9px] font-bold mt-0.5 <%= isSelected ? 'text-green-100' : 'text-zinc-300' %>">—</span>
+                        <% } %>
+                    </a>
+                <% } %>
+                <% } %>
+            </div>
+
+            <!-- Selected month summary bar -->
+            <div class="px-5 py-3 bg-zinc-50 border-t border-zinc-100 flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                    <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <p class="text-sm font-black text-zinc-700"><%= MONTH_NAMES[selectedMonth-1] %> <%= selectedYear %></p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Orders</p>
+                        <p class="text-sm font-black text-zinc-900"><%= statusCounts.all %></p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Revenue</p>
+                        <p class="text-sm font-black text-green-700">Rs. <%= selectedMonthRevenue.toLocaleString('en-IN') %></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search + Filter -->
+        <form method="GET" action="/admin/orders" id="filterForm">
+            <input type="hidden" name="year" value="<%= selectedYear %>">
+            <input type="hidden" name="month" value="<%= selectedMonth %>">
+            <div class="flex flex-col sm:flex-row gap-3 mb-4">
+                <div class="relative flex-1">
+                    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    <input id="searchInput" name="search" type="text"
+                        value="<%= searchQuery %>"
+                        placeholder="Search by name, email or order ID…"
+                        class="w-full pl-9 pr-4 py-2.5 border border-zinc-200 rounded-xl text-sm font-medium focus:outline-none focus:border-green-500 bg-white transition-all">
+                </div>
+                <input type="hidden" name="status" value="<%= statusFilter %>">
+                <button type="submit" class="px-5 py-2.5 bg-zinc-900 text-white rounded-xl text-sm font-bold hover:bg-green-700 transition-all shrink-0">
+                    Search
+                </button>
+                <% if (searchQuery) { %>
+                <a href="/admin/orders?year=<%= selectedYear %>&month=<%= selectedMonth %>&status=<%= statusFilter %>"
+                   class="px-4 py-2.5 border border-zinc-200 rounded-xl text-sm font-bold text-zinc-500 hover:bg-zinc-50 transition-all shrink-0 flex items-center">
+                    Clear
+                </a>
+                <% } %>
+            </div>
+        </form>
+
+        <!-- Filter Tabs -->
+        <div class="flex gap-2 mb-2 overflow-x-auto pb-2">
+            <% ['all','pending','confirmed','shipped','delivered','cancelled'].forEach(s => { %>
+            <a href="/admin/orders?year=<%= selectedYear %>&month=<%= selectedMonth %>&status=<%= s %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>"
+                class="whitespace-nowrap px-5 py-2.5 rounded-full text-sm font-bold transition-all <%= statusFilter === s ? 'bg-zinc-900 text-white' : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-50' %>">
+                <%= s.charAt(0).toUpperCase() + s.slice(1) %> (<%= statusCounts[s] %>)
+            </a>
+            <% }) %>
+        </div>
+
+        <!-- Result info -->
+        <div class="flex items-center justify-between mb-4">
+            <p class="text-xs font-bold text-zinc-400">
+                <% if (totalOrders === 0) { %>
+                    No orders found for <%= MONTH_NAMES[selectedMonth-1] %> <%= selectedYear %>
+                <% } else { %>
+                    Showing <%= (currentPage - 1) * 10 + 1 %>–<%= Math.min(currentPage * 10, totalOrders) %> of <%= totalOrders %> orders · <%= MONTH_NAMES[selectedMonth-1] %> <%= selectedYear %>
+                <% } %>
+            </p>
+        </div>
+
+        <!-- Orders List -->
+        <div class="space-y-4">
+            <% orders.forEach(order => { %>
+            <div class="order-card bg-white rounded-2xl border border-zinc-100 shadow-sm p-6 transition-all" data-status="<%= order.status %>">
+                <div class="flex flex-col md:flex-row md:items-start justify-between gap-4">
+
+                    <!-- Customer Info -->
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center gap-3 mb-3 flex-wrap">
+                            <span class="status-badge text-xs font-black px-3 py-1 rounded-full
+                                <%= order.status === 'pending'   ? 'bg-yellow-100 text-yellow-700' :
+                                    order.status === 'confirmed' ? 'bg-blue-100 text-blue-700'   :
+                                    order.status === 'shipped'   ? 'bg-purple-100 text-purple-700':
+                                    order.status === 'delivered' ? 'bg-green-100 text-green-700' :
+                                    order.status === 'cancelled' ? 'bg-red-100 text-red-700'     :
+                                    'bg-zinc-100 text-zinc-700' %>">
+                                <%= order.status.charAt(0).toUpperCase() + order.status.slice(1) %>
+                            </span>
+                            <span class="text-xs text-zinc-400 font-bold"><%= toISTDisplay(order.created_at) %></span>
+                            <span class="text-[10px] font-black text-zinc-300 font-mono">#<%= order.id.toString().slice(0, 8) %></span>
+                        </div>
+                        <p class="font-black text-zinc-900 text-lg leading-tight"><%= order.addresses?.first_name %> <%= order.addresses?.last_name %></p>
+                        <p class="text-sm text-zinc-500 mt-0.5"><%= order.addresses?.phone %></p>
+                        <p class="text-sm text-zinc-500"><%= order.email %></p>
+                        <p class="text-sm text-zinc-400 mt-1 leading-snug"><%= order.addresses?.address %>, <%= order.addresses?.city %> — <%= order.addresses?.pin_code %></p>
+                    </div>
+
+                    <!-- Items -->
+                    <div class="flex-1 min-w-0">
+                        <% if (order.order_items && order.order_items.length > 0) { %>
+                        <button onclick="openOrderItems('<%= order.id %>')"
+                            class="group w-full flex items-center justify-between gap-3 bg-zinc-50 hover:bg-green-50 border border-zinc-100 hover:border-green-200 rounded-xl px-4 py-3 transition-all">
+                            <div class="flex items-center gap-2.5">
+                                <div class="w-8 h-8 bg-white border border-zinc-200 group-hover:border-green-300 rounded-lg flex items-center justify-center transition-all">
+                                    <svg class="w-4 h-4 text-zinc-400 group-hover:text-green-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                                    </svg>
+                                </div>
+                                <div class="text-left">
+                                    <p class="text-xs font-black text-zinc-700 group-hover:text-green-800 transition-colors"><%= order.order_items.length %> item<%= order.order_items.length !== 1 ? 's' : '' %></p>
+                                    <p class="text-[10px] text-zinc-400 font-medium">Click to view details</p>
+                                </div>
+                            </div>
+                            <svg class="w-4 h-4 text-zinc-300 group-hover:text-green-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                            </svg>
+                        </button>
+                        <% } else { %>
+                        <div class="flex items-center gap-2 bg-zinc-50 rounded-xl px-4 py-3">
+                            <svg class="w-3.5 h-3.5 text-zinc-300 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                            <p class="text-xs text-zinc-400 font-medium">Item details unavailable</p>
+                        </div>
+                        <% } %>
+                        <div class="flex justify-between mt-3 pt-3 border-t border-zinc-100">
+                            <span class="text-sm font-black text-zinc-900">Total</span>
+                            <span class="text-sm font-black text-green-700">Rs. <%= order.total.toLocaleString('en-IN') %></span>
+                        </div>
+                    </div>
+
+                    <!-- Status Update -->
+                    <div class="md:w-44 shrink-0">
+                        <p class="text-xs font-black uppercase tracking-widest text-zinc-400 mb-2">Update Status</p>
+                        <select onchange="updateStatus('<%= order.id %>', this)"
+                            class="w-full p-3 rounded-xl border border-zinc-200 outline-none focus:border-green-600 text-sm font-bold bg-white transition-all cursor-pointer">
+                            <option value="pending"   <%= order.status === 'pending'   ? 'selected' : '' %>>Pending</option>
+                            <option value="confirmed" <%= order.status === 'confirmed' ? 'selected' : '' %>>Confirmed</option>
+                            <option value="shipped"   <%= order.status === 'shipped'   ? 'selected' : '' %>>Shipped</option>
+                            <option value="delivered" <%= order.status === 'delivered' ? 'selected' : '' %>>Delivered</option>
+                            <option value="cancelled" <%= order.status === 'cancelled' ? 'selected' : '' %>>Cancelled</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+            <% }) %>
+
+            <% if (orders.length === 0) { %>
+            <div class="text-center py-20">
+                <div class="w-16 h-16 bg-zinc-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg class="w-8 h-8 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                </div>
+                <p class="text-zinc-500 font-bold text-lg">No orders in <%= MONTH_NAMES[selectedMonth-1] %> <%= selectedYear %></p>
+                <p class="text-zinc-400 text-sm mt-1">Try a different month or clear the filter</p>
+                <a href="/admin/orders" class="inline-block mt-4 px-5 py-2.5 bg-zinc-900 text-white rounded-xl text-sm font-bold hover:bg-green-700 transition-all">
+                    Back to current month
+                </a>
+            </div>
+            <% } %>
+        </div>
+
+        <!-- Pagination -->
+        <% if (totalPages > 1) { %>
+        <div class="flex items-center justify-center gap-2 mt-10">
+            <% if (currentPage > 1) { %>
+            <a href="/admin/orders?page=<%= currentPage - 1 %>&year=<%= selectedYear %>&month=<%= selectedMonth %>&status=<%= statusFilter %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>"
+                class="flex items-center gap-1.5 px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-bold text-zinc-600 hover:bg-zinc-50 transition-all">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Prev
+            </a>
+            <% } else { %>
+            <span class="flex items-center gap-1.5 px-4 py-2.5 bg-zinc-50 border border-zinc-100 rounded-xl text-sm font-bold text-zinc-300 cursor-not-allowed">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                Prev
+            </span>
+            <% } %>
+
+            <% for (let p = 1; p <= totalPages; p++) { %>
+                <% if (p === 1 || p === totalPages || (p >= currentPage - 2 && p <= currentPage + 2)) { %>
+                <a href="/admin/orders?page=<%= p %>&year=<%= selectedYear %>&month=<%= selectedMonth %>&status=<%= statusFilter %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>"
+                    class="w-10 h-10 flex items-center justify-center rounded-xl text-sm font-black transition-all
+                    <%= p === currentPage ? 'bg-zinc-900 text-white' : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50' %>">
+                    <%= p %>
+                </a>
+                <% } else if (p === currentPage - 3 || p === currentPage + 3) { %>
+                <span class="w-10 h-10 flex items-center justify-center text-zinc-300 font-bold">…</span>
+                <% } %>
+            <% } %>
+
+            <% if (currentPage < totalPages) { %>
+            <a href="/admin/orders?page=<%= currentPage + 1 %>&year=<%= selectedYear %>&month=<%= selectedMonth %>&status=<%= statusFilter %><%= searchQuery ? '&search=' + encodeURIComponent(searchQuery) : '' %>"
+                class="flex items-center gap-1.5 px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-bold text-zinc-600 hover:bg-zinc-50 transition-all">
+                Next
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </a>
+            <% } else { %>
+            <span class="flex items-center gap-1.5 px-4 py-2.5 bg-zinc-50 border border-zinc-100 rounded-xl text-sm font-bold text-zinc-300 cursor-not-allowed">
+                Next
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </span>
+            <% } %>
+        </div>
+        <% } %>
+
+    </div>
+
+    <%- include("partials/footer") %>
+
+    <!-- Order Items Modal -->
+    <div id="orderItemsModal" class="hidden fixed inset-0 z-[9999] flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeOrderItems()"></div>
+        <div class="relative bg-white w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col overflow-hidden" style="max-height: 88vh;">
+            <div class="flex justify-center pt-3 pb-1 sm:hidden shrink-0"><div class="w-10 h-1 bg-zinc-200 rounded-full"></div></div>
+            <div class="px-6 pt-4 pb-4 border-b border-zinc-100 shrink-0">
+                <div class="flex items-start justify-between gap-4">
+                    <div class="min-w-0">
+                        <p class="text-[10px] font-black uppercase tracking-widest text-green-600 mb-0.5">Order Items</p>
+                        <h2 class="font-black text-zinc-900 text-lg leading-tight truncate" id="modalOrderTitle">Loading…</h2>
+                        <p class="text-xs text-zinc-400 font-medium mt-0.5" id="modalOrderMeta"></p>
+                    </div>
+                    <button onclick="closeOrderItems()" class="shrink-0 w-9 h-9 flex items-center justify-center rounded-xl bg-zinc-100 hover:bg-red-50 hover:text-red-500 transition-all text-zinc-400 mt-0.5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+            </div>
+            <div class="overflow-y-auto flex-1 px-6 py-4 space-y-3" id="modalItemsList">
+                <div id="modalSkeleton" class="space-y-3">
+                    <% [1,2,3].forEach(() => { %>
+                    <div class="flex items-center gap-4 bg-zinc-50 rounded-2xl p-3 animate-pulse">
+                        <div class="w-16 h-16 rounded-xl bg-zinc-200 shrink-0"></div>
+                        <div class="flex-1 space-y-2"><div class="h-3 bg-zinc-200 rounded-full w-3/4"></div><div class="h-2.5 bg-zinc-100 rounded-full w-1/2"></div></div>
+                        <div class="h-3 bg-zinc-200 rounded-full w-16"></div>
+                    </div>
+                    <% }) %>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-zinc-100 shrink-0 bg-zinc-50/80">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-xs font-black text-zinc-400 uppercase tracking-widest">Order Total</p>
+                        <p class="text-[10px] text-zinc-400 font-medium mt-0.5" id="modalItemCount"></p>
+                    </div>
+                    <span class="text-2xl font-black text-green-700" id="modalOrderTotal">—</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    function openOrderItems(orderId) {
+        const modal = document.getElementById('orderItemsModal');
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        document.getElementById('modalOrderTitle').textContent = 'Loading…';
+        document.getElementById('modalOrderMeta').textContent = '';
+        document.getElementById('modalOrderTotal').textContent = '—';
+        document.getElementById('modalItemCount').textContent = '';
+        document.getElementById('modalSkeleton').classList.remove('hidden');
+        document.querySelectorAll('.modal-item-card').forEach(el => el.remove());
+
+        fetch(`/admin/order-items/${orderId}`)
+            .then(r => r.json())
+            .then(data => { if (data.error) renderModalError(data.error); else renderModal(data); })
+            .catch(() => renderModalError('Failed to load items.'));
+    }
+
+    function renderModal(data) {
+        const { order, items } = data;
+        document.getElementById('modalOrderTitle').textContent = order.customer || 'Order Details';
+        document.getElementById('modalOrderMeta').textContent = '#' + order.id.slice(0, 8) + '  ·  ' + order.email;
+        document.getElementById('modalOrderTotal').textContent = 'Rs. ' + order.total.toLocaleString('en-IN');
+        document.getElementById('modalItemCount').textContent = items.length + ' item' + (items.length !== 1 ? 's' : '') + '  ·  qty: ' + items.reduce((s,i) => s + i.quantity, 0);
+        document.getElementById('modalSkeleton').classList.add('hidden');
+        const list = document.getElementById('modalItemsList');
+
+        if (items.length === 0) {
+            const el = document.createElement('div');
+            el.className = 'modal-item-card text-center py-10';
+            el.innerHTML = `<p class="text-zinc-400 font-bold text-sm">No item details available</p><p class="text-zinc-300 text-xs mt-1">Order placed before system update</p>`;
+            list.appendChild(el); return;
+        }
+
+        items.forEach(item => {
+            const card = document.createElement('div');
+            card.className = 'modal-item-card flex items-center gap-4 bg-white border border-zinc-100 rounded-2xl p-3 shadow-sm hover:shadow-md transition-shadow';
+            card.innerHTML = `
+                <div class="w-16 h-16 rounded-xl overflow-hidden bg-zinc-50 border border-zinc-100 shrink-0 flex items-center justify-center">
+                    ${item.product_image
+                        ? `<img src="${item.product_image}" class="w-full h-full object-cover" loading="lazy" onerror="this.parentElement.innerHTML='<svg class=\\'w-7 h-7 text-zinc-200\\' fill=\\'none\\' stroke=\\'currentColor\\' viewBox=\\'0 0 24 24\\'><path stroke-linecap=\\'round\\' stroke-linejoin=\\'round\\' stroke-width=\\'1.5\\' d=\\'M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z\\'/></svg>'">`
+                        : `<svg class="w-7 h-7 text-zinc-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>`
+                    }
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="font-black text-zinc-900 text-sm leading-tight">${item.product_name}</p>
+                    <div class="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                        ${item.variant_weight ? `<span class="inline-flex items-center bg-amber-50 text-amber-700 border border-amber-100 text-[10px] font-black px-2 py-0.5 rounded-full">${item.variant_weight}</span>` : ''}
+                        <span class="inline-flex items-center bg-blue-50 text-blue-700 border border-blue-100 text-[10px] font-black px-2 py-0.5 rounded-full">×${item.quantity}</span>
+                        <span class="text-[10px] text-zinc-400 font-bold">@ Rs. ${Number(item.price).toLocaleString('en-IN')}</span>
+                    </div>
+                </div>
+                <div class="shrink-0 text-right">
+                    <p class="font-black text-zinc-900 text-sm">Rs. ${(item.price * item.quantity).toLocaleString('en-IN')}</p>
+                </div>`;
+            list.appendChild(card);
+        });
+    }
+
+    function renderModalError(msg) {
+        document.getElementById('modalSkeleton').classList.add('hidden');
+        document.getElementById('modalOrderTitle').textContent = 'Error';
+        const el = document.createElement('div');
+        el.className = 'modal-item-card text-center py-10';
+        el.innerHTML = `<p class="text-red-400 font-bold text-sm">${msg}</p>`;
+        document.getElementById('modalItemsList').appendChild(el);
+    }
+
+    function closeOrderItems() {
+        document.getElementById('orderItemsModal').classList.add('hidden');
+        document.body.style.overflow = '';
+        document.querySelectorAll('.modal-item-card').forEach(el => el.remove());
+        document.getElementById('modalSkeleton').classList.remove('hidden');
+    }
+
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closeOrderItems(); });
+    </script>
+
+</body>
+</html>

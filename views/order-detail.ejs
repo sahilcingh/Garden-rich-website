@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details | GardenRich</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-zinc-50 font-sans antialiased text-zinc-900">
+    <%- include("partials/header") %>
+
+    <div class="max-w-2xl mx-auto px-6 py-10 pb-24">
+
+        <a href="/my-orders" class="inline-flex items-center text-sm font-bold text-green-700 hover:text-green-800 mb-6 group transition-colors">
+            <svg class="w-4 h-4 mr-2 transform group-hover:-translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Back to Orders
+        </a>
+
+        <%
+            const statusSteps = ['pending', 'confirmed', 'shipped', 'delivered'];
+            const currentStep = statusSteps.indexOf(order.status);
+            const isCancelled = order.status === 'cancelled';
+            const _istDisplay = toISTDisplay(order.created_at);
+            const [_datePart, _timePart] = _istDisplay.split(', ');
+            const dateStr = _datePart;
+            const timeStr = _istDisplay.replace(_datePart + ', ', '');
+        %>
+
+        <!-- Status & Progress -->
+        <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6 mb-4">
+            <div class="flex items-center justify-between mb-5">
+                <% if (isCancelled) { %>
+                <span class="bg-red-100 text-red-700 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-widest">Cancelled</span>
+                <% } else { %>
+                <span class="bg-<%= order.status === 'delivered' ? 'green' : order.status === 'shipped' ? 'purple' : order.status === 'confirmed' ? 'blue' : 'yellow' %>-100 text-<%= order.status === 'delivered' ? 'green' : order.status === 'shipped' ? 'purple' : order.status === 'confirmed' ? 'blue' : 'yellow' %>-700 text-xs font-black px-3 py-1.5 rounded-full uppercase tracking-widest capitalize"><%= order.status %></span>
+                <% } %>
+                <p class="text-xs text-zinc-400 font-medium"><%= dateStr %> at <%= timeStr %></p>
+            </div>
+
+            <% if (!isCancelled) { %>
+            <div class="relative flex justify-between items-center">
+                <!-- Progress line -->
+                <div class="absolute top-5 left-0 right-0 h-0.5 bg-zinc-100 z-0"></div>
+                <div class="absolute top-5 left-0 h-0.5 bg-green-500 z-0 transition-all"
+                     style="width: <%= currentStep === 0 ? '0%' : currentStep === 1 ? '33%' : currentStep === 2 ? '66%' : '100%' %>"></div>
+
+                <% statusSteps.forEach((step, idx) => { %>
+                <div class="flex flex-col items-center z-10 gap-1.5">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center <%= idx <= currentStep ? 'bg-green-500' : 'bg-zinc-100' %>">
+                        <% if (idx < currentStep) { %>
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        <% } else if (idx === currentStep) { %>
+                        <div class="w-3 h-3 rounded-full bg-white"></div>
+                        <% } else { %>
+                        <div class="w-3 h-3 rounded-full bg-zinc-300"></div>
+                        <% } %>
+                    </div>
+                    <p class="text-[10px] font-black uppercase tracking-widest <%= idx <= currentStep ? 'text-green-600' : 'text-zinc-400' %> capitalize"><%= step %></p>
+                </div>
+                <% }) %>
+            </div>
+            <% } %>
+        </div>
+
+        <!-- Items Ordered -->
+        <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6 mb-4">
+            <h2 class="text-xs font-black uppercase tracking-widest text-zinc-400 mb-4">Items Ordered</h2>
+
+            <% if (order.order_items && order.order_items.length > 0) { %>
+            <div class="space-y-4">
+                <% order.order_items.forEach((item, idx) => { %>
+                <div class="flex items-center gap-4">
+                    <% if (item.product_image) { %>
+                    <div class="w-16 h-16 rounded-xl overflow-hidden bg-zinc-100 shrink-0">
+                        <img src="<%= item.product_image %>" class="w-full h-full object-cover" alt="<%= item.product_name %>">
+                    </div>
+                    <% } else { %>
+                    <div class="w-16 h-16 rounded-xl bg-zinc-100 shrink-0 flex items-center justify-center">
+                        <svg class="w-6 h-6 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10"/>
+                        </svg>
+                    </div>
+                    <% } %>
+
+                    <div class="flex-1 min-w-0">
+                        <p class="font-bold text-zinc-800 text-sm leading-tight"><%= item.product_name %></p>
+                        <% if (item.weight) { %>
+                        <p class="text-xs text-zinc-400 font-medium mt-0.5"><%= item.weight %></p>
+                        <% } %>
+                        <p class="text-xs text-zinc-500 font-medium mt-0.5">Qty: <span class="font-black text-zinc-700"><%= item.quantity %></span></p>
+                    </div>
+
+                    <div class="text-right shrink-0">
+                        <p class="font-black text-zinc-900 text-sm">Rs. <%= (item.price * item.quantity).toLocaleString('en-IN') %></p>
+                        <p class="text-[10px] text-zinc-400 font-medium mt-0.5">Rs. <%= item.price %> each</p>
+                    </div>
+                </div>
+                <% if (idx < order.order_items.length - 1) { %>
+                <hr class="border-zinc-50">
+                <% } %>
+                <% }) %>
+            </div>
+
+            <div class="mt-5 pt-4 border-t border-zinc-100 flex justify-between items-center">
+                <span class="text-sm font-black text-zinc-900">Total</span>
+                <span class="text-xl font-black text-green-700">Rs. <%= order.total.toLocaleString('en-IN') %></span>
+            </div>
+            <% } else { %>
+            <p class="text-sm text-zinc-400 font-medium text-center py-4">No items found for this order.</p>
+            <% } %>
+        </div>
+
+        <!-- Delivering To -->
+        <% if (order.addresses) { %>
+        <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6 mb-4">
+            <h2 class="text-xs font-black uppercase tracking-widest text-zinc-400 mb-3">Delivering To</h2>
+            <p class="font-bold text-zinc-800"><%= order.addresses.first_name %> <%= order.addresses.last_name %></p>
+            <p class="text-sm text-zinc-500 font-medium mt-1"><%= order.addresses.address %></p>
+            <p class="text-sm text-zinc-500 font-medium"><%= order.addresses.city %> — <%= order.addresses.pin_code %></p>
+            <p class="text-sm text-zinc-500 font-medium mt-1"><%= order.addresses.phone %></p>
+        </div>
+        <% } %>
+
+        <!-- Payment -->
+        <div class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-6">
+            <h2 class="text-xs font-black uppercase tracking-widest text-zinc-400 mb-3">Payment</h2>
+            <div class="flex items-center justify-between">
+                <p class="font-bold text-zinc-800">Cash On Delivery</p>
+                <span class="bg-yellow-100 text-yellow-700 text-[10px] font-black px-2.5 py-1 rounded-lg uppercase tracking-widest">COD</span>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="/javascript/index.js"></script>
+    <%- include("partials/footer") %>
+</body>
+</html>

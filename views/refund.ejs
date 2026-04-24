@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Refund & Cancellation | GardenRich</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body class="bg-zinc-50 font-sans antialiased text-zinc-900">
+    <%- include("partials/header") %>
+
+    <div class="max-w-4xl mx-auto py-20 px-6">
+        <a href="/" class="text-sm font-bold text-green-600 hover:text-green-700 mb-4 inline-block">← Back to Home</a>
+        
+        <h1 class="text-4xl font-black tracking-tight mb-2">Refund & Cancellation</h1>
+        <p class="text-zinc-400 text-sm font-medium mb-12">Our goal is your 100% satisfaction.</p>
+
+        <div class="bg-white rounded-[2.5rem] p-10 shadow-sm border border-zinc-100 space-y-12">
+            
+            <section class="border-l-4 border-green-600 pl-8">
+                <h2 class="text-2xl font-black mb-4">Cancellation Policy</h2>
+                <p class="text-zinc-600 leading-relaxed">
+                    Orders can be cancelled within 2 hours of placement or before they are shipped, whichever is earlier. Once an order is "Shipped," it cannot be cancelled.
+                </p>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-black mb-6">Returns & Exchanges</h2>
+                <p class="text-zinc-600 mb-6 leading-relaxed">
+                    Due to the personal nature of our products (skincare/haircare), we only accept returns if:
+                </p>
+                <ul class="space-y-4">
+                    <li class="flex items-start">
+                        <span class="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 shrink-0"></span>
+                        <span class="text-zinc-600 font-medium">The product received is damaged or leaked.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 shrink-0"></span>
+                        <span class="text-zinc-600 font-medium">The wrong item was delivered.</span>
+                    </li>
+                    <li class="flex items-start">
+                        <span class="w-2 h-2 bg-green-600 rounded-full mt-2 mr-3 shrink-0"></span>
+                        <span class="text-zinc-600 font-medium">The product has passed its expiry date at the time of delivery.</span>
+                    </li>
+                </ul>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-black mb-4">Refund Process</h2>
+                <p class="text-zinc-600 leading-relaxed">
+                    Approved refunds will be processed within 5-7 business days to the original payment method. For Cash on Delivery (COD) orders, we will request your bank details for a bank transfer.
+                </p>
+            </section>
+
+        </div>
+    </div>
+
+    <%- include("partials/footer") %>
+</body>
+</html>
