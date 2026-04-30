@@ -7,6 +7,7 @@ const path = require("path");
 const multer = require("multer");
 const upload = multer({ storage: multer.memoryStorage() });
 const nodemailer = require("nodemailer");
+const cors = require("cors");
 
 const transporter = nodemailer.createTransport({
   service: "gmail",
@@ -16,18 +17,29 @@ const transporter = nodemailer.createTransport({
   },
 });
 
+// Trust Vercel's reverse proxy so Express knows it's an HTTPS connection
+app.set("trust proxy", 1);
+
+// Enable CORS and allow credentials to support custom domain cookies
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
+
+const isProd = !!process.env.VERCEL || process.env.NODE_ENV === "production";
 
 app.use(
   cookieSession({
     name: "gardenrich_session",
     secret: process.env.SESSION_SECRET || "gardenrich-secret-key",
     maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    secure: false,   // let Vercel/browser handle HTTPS; cookie works on both
+    secure: isProd, // True on HTTPS for Vercel, False for localhost
     httpOnly: true,
-    sameSite: "lax",
+    sameSite: isProd ? "none" : "lax", // 'none' helps with strict cross-origin/redirect domain policies in modern browsers
   })
 );
 
