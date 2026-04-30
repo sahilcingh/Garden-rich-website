@@ -583,24 +583,28 @@ app.post("/forgot-password", async (req, res) => {
 
   if (!email?.trim()) return renderErr("Please enter your email address.");
 
-  // Check if email exists in profiles
   const { data: profile } = await supabase
     .from("profiles")
     .select("id")
     .eq("email", email.trim())
     .maybeSingle();
 
-  // Always show success message even if email not found (security best practice)
-  // But only send OTP if account actually exists
-  if (profile) {
-    const otp = generateOTP();
-    req.session.passwordReset = {
-      email: email.trim(),
-      otp,
-      expiresAt: Date.now() + 10 * 60 * 1000,
-      attempts: 0,
-    };
+  const resetToken = require('crypto').randomBytes(24).toString('hex');
+  const otp = generateOTP();
 
+  // Store state in Supabase instead of session memory/cookie
+  await supabase.from("settings").upsert(
+    { key: "reset_" + resetToken, value: JSON.stringify({
+        email: email.trim(),
+        otp,
+        expiresAt: Date.now() + 10 * 60 * 1000,
+        attempts: 0,
+      })
+    },
+    { onConflict: "key" }
+  );
+
+  if (profile) {
     try {
       await transporter.sendMail({
         from: `"GardenRich" <${process.env.EMAIL_USER}>`,
@@ -625,32 +629,42 @@ app.post("/forgot-password", async (req, res) => {
     }
   }
 
-  res.render("forgot-password", {
-    error: null,
-    success: "If an account exists for that email, a reset code has been sent.",
-  });
+  // Redirect to reset password page via URL token (bypasses cookie issues)
+  res.redirect(`/reset-password?token=${resetToken}`);
 });
 
 // ── Reset Password (OTP verify + new password) ────────────────
-app.get("/reset-password", (req, res) => {
-  if (!req.session.passwordReset) return res.redirect("/forgot-password");
+app.get("/reset-password", async (req, res) => {
+  const token = req.query.token;
+  if (!token) return res.redirect("/forgot-password");
+
+  const { data } = await supabase.from("settings").select("value").eq("key", "reset_" + token).maybeSingle();
+  if (!data) return res.redirect("/forgot-password");
+
+  const pending = JSON.parse(data.value);
+
   res.render("reset-password", {
-    email: req.session.passwordReset.email,
+    email: pending.email,
+    token: token,
     error: null,
   });
 });
 
 app.post("/reset-password", async (req, res) => {
-  const { otp, password, confirmPassword } = req.body;
-  const pending = req.session.passwordReset;
+  const { otp, password, confirmPassword, token } = req.body;
+
+  if (!token) return res.redirect("/forgot-password");
+
+  const { data } = await supabase.from("settings").select("value").eq("key", "reset_" + token).maybeSingle();
+  if (!data) return res.redirect("/forgot-password");
+
+  const pending = JSON.parse(data.value);
 
   const renderErr = (msg) =>
-    res.render("reset-password", { email: pending?.email || "", error: msg });
-
-  if (!pending) return res.redirect("/forgot-password");
+    res.render("reset-password", { email: pending.email, token, error: msg });
 
   if (Date.now() > pending.expiresAt) {
-    delete req.session.passwordReset;
+    await supabase.from("settings").delete().eq("key", "reset_" + token);
     return res.render("forgot-password", {
       error: "Reset code expired. Please request a new one.",
       success: null,
@@ -659,12 +673,17 @@ app.post("/reset-password", async (req, res) => {
 
   pending.attempts += 1;
   if (pending.attempts > 5) {
-    delete req.session.passwordReset;
+    await supabase.from("settings").delete().eq("key", "reset_" + token);
     return res.render("forgot-password", {
       error: "Too many incorrect attempts. Please request a new code.",
       success: null,
     });
   }
+
+  await supabase.from("settings").upsert(
+    { key: "reset_" + token, value: JSON.stringify(pending) },
+    { onConflict: "key" }
+  );
 
   if (otp.trim() !== pending.otp) {
     return renderErr(`Incorrect code. ${6 - pending.attempts} attempt${6 - pending.attempts === 1 ? "" : "s"} remaining.`);
@@ -678,7 +697,6 @@ app.post("/reset-password", async (req, res) => {
     return renderErr("Passwords do not match.");
   }
 
-  // Look up user's auth ID from profiles
   const { data: profile } = await supabase
     .from("profiles")
     .select("id")
@@ -686,12 +704,10 @@ app.post("/reset-password", async (req, res) => {
     .maybeSingle();
 
   if (!profile) {
-    delete req.session.passwordReset;
+    await supabase.from("settings").delete().eq("key", "reset_" + token);
     return res.redirect("/forgot-password");
   }
 
-  // Requires supabaseAdmin (service role key).
-  // If not configured, guide the user to set it up.
   if (!supabaseAdmin) {
     console.error("Password reset requires SUPABASE_SERVICE_KEY env variable.");
     return renderErr(
@@ -708,7 +724,7 @@ app.post("/reset-password", async (req, res) => {
     return renderErr("Failed to update password. Please try again.");
   }
 
-  delete req.session.passwordReset;
+  await supabase.from("settings").delete().eq("key", "reset_" + token);
 
   res.render("login", {
     error: null,
