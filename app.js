@@ -593,8 +593,10 @@ app.post("/forgot-password", async (req, res) => {
   const otp = generateOTP();
 
   // Store state in Supabase instead of session memory/cookie
-  await supabase.from("settings").upsert(
-    { key: "reset_" + resetToken, value: JSON.stringify({
+  // Use supabaseAdmin if available to bypass RLS, otherwise fallback
+  const client = supabaseAdmin || supabase;
+  const { error: upsertErr } = await client.from("settings").upsert(
+    { key: "signup_reset_" + resetToken, value: JSON.stringify({
         email: email.trim(),
         otp,
         expiresAt: Date.now() + 10 * 60 * 1000,
@@ -603,6 +605,11 @@ app.post("/forgot-password", async (req, res) => {
     },
     { onConflict: "key" }
   );
+
+  if (upsertErr) {
+    console.error("Upsert Error:", upsertErr.message);
+    return renderErr("Failed to process request. Please try again.");
+  }
 
   if (profile) {
     try {
@@ -629,8 +636,12 @@ app.post("/forgot-password", async (req, res) => {
     }
   }
 
-  // Redirect to reset password page via URL token (bypasses cookie issues)
-  res.redirect(`/reset-password?token=${resetToken}`);
+  // Restore the original UX: render the success message on the same page
+  res.render("forgot-password", {
+    error: null,
+    success: "If an account exists for that email, a reset code has been sent.",
+    resetToken: resetToken
+  });
 });
 
 // ── Reset Password (OTP verify + new password) ────────────────
@@ -638,7 +649,9 @@ app.get("/reset-password", async (req, res) => {
   const token = req.query.token;
   if (!token) return res.redirect("/forgot-password");
 
-  const { data } = await supabase.from("settings").select("value").eq("key", "reset_" + token).maybeSingle();
+  const client = supabaseAdmin || supabase;
+  const { data } = await client.from("settings").select("value").eq("key", "signup_reset_" + token).maybeSingle();
+  
   if (!data) return res.redirect("/forgot-password");
 
   const pending = JSON.parse(data.value);
@@ -655,7 +668,8 @@ app.post("/reset-password", async (req, res) => {
 
   if (!token) return res.redirect("/forgot-password");
 
-  const { data } = await supabase.from("settings").select("value").eq("key", "reset_" + token).maybeSingle();
+  const client = supabaseAdmin || supabase;
+  const { data } = await client.from("settings").select("value").eq("key", "signup_reset_" + token).maybeSingle();
   if (!data) return res.redirect("/forgot-password");
 
   const pending = JSON.parse(data.value);
@@ -664,7 +678,7 @@ app.post("/reset-password", async (req, res) => {
     res.render("reset-password", { email: pending.email, token, error: msg });
 
   if (Date.now() > pending.expiresAt) {
-    await supabase.from("settings").delete().eq("key", "reset_" + token);
+    await client.from("settings").delete().eq("key", "signup_reset_" + token);
     return res.render("forgot-password", {
       error: "Reset code expired. Please request a new one.",
       success: null,
@@ -673,15 +687,15 @@ app.post("/reset-password", async (req, res) => {
 
   pending.attempts += 1;
   if (pending.attempts > 5) {
-    await supabase.from("settings").delete().eq("key", "reset_" + token);
+    await client.from("settings").delete().eq("key", "signup_reset_" + token);
     return res.render("forgot-password", {
       error: "Too many incorrect attempts. Please request a new code.",
       success: null,
     });
   }
 
-  await supabase.from("settings").upsert(
-    { key: "reset_" + token, value: JSON.stringify(pending) },
+  await client.from("settings").upsert(
+    { key: "signup_reset_" + token, value: JSON.stringify(pending) },
     { onConflict: "key" }
   );
 
@@ -704,7 +718,7 @@ app.post("/reset-password", async (req, res) => {
     .maybeSingle();
 
   if (!profile) {
-    await supabase.from("settings").delete().eq("key", "reset_" + token);
+    await client.from("settings").delete().eq("key", "signup_reset_" + token);
     return res.redirect("/forgot-password");
   }
 
@@ -724,7 +738,7 @@ app.post("/reset-password", async (req, res) => {
     return renderErr("Failed to update password. Please try again.");
   }
 
-  await supabase.from("settings").delete().eq("key", "reset_" + token);
+  await client.from("settings").delete().eq("key", "signup_reset_" + token);
 
   res.render("login", {
     error: null,
