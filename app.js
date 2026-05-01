@@ -68,13 +68,10 @@ const supabaseAdmin = process.env.SUPABASE_SERVICE_KEY
   : null;
 
 // ── Supabase-backed pending signup store ─────────────────────
-// Vercel serverless resets in-memory state on every request.
-// We store pending signups in the settings table as JSON, keyed by token.
-// Only the tiny token is stored in the cookie (no 4KB limit issue).
-
 async function getPendingSignup(token) {
   if (!token) return null;
-  const { data } = await supabase
+  const client = supabaseAdmin || supabase; // FIX: Use the VIP Admin Key
+  const { data } = await client
     .from("settings")
     .select("value")
     .eq("key", "signup_" + token)
@@ -82,7 +79,6 @@ async function getPendingSignup(token) {
   if (!data) return null;
   try {
     const parsed = JSON.parse(data.value);
-    // Check expiry
     if (Date.now() > parsed.expiresAt) {
       await deletePendingSignup(token);
       return null;
@@ -92,10 +88,12 @@ async function getPendingSignup(token) {
 }
 
 async function setPendingSignup(token, data) {
-  await supabase.from("settings").upsert(
+  const client = supabaseAdmin || supabase; // FIX: Use the VIP Admin Key
+  const { error } = await client.from("settings").upsert(
     { key: "signup_" + token, value: JSON.stringify(data) },
     { onConflict: "key" }
   );
+  if (error) console.error("Signup Save Error:", error.message);
 }
 
 async function updatePendingSignup(token, updates) {
@@ -106,7 +104,8 @@ async function updatePendingSignup(token, updates) {
 
 async function deletePendingSignup(token) {
   if (!token) return;
-  await supabase.from("settings").delete().eq("key", "signup_" + token);
+  const client = supabaseAdmin || supabase; // FIX: Use the VIP Admin Key
+  await client.from("settings").delete().eq("key", "signup_" + token);
 }
 
 app.set("view engine", "ejs");
