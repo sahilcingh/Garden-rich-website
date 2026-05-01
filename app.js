@@ -582,21 +582,23 @@ app.post("/forgot-password", async (req, res) => {
 
   if (!email?.trim()) return renderErr("Please enter your email address.");
 
-  const { data: profile } = await supabase
+  // FIX 1: Grab the VIP Admin client so Supabase RLS doesn't block the read
+  const client = supabaseAdmin || supabase;
+
+  // FIX 2: Use the Admin client AND force the email to lowercase
+  const { data: profile } = await client
     .from("profiles")
     .select("id")
-    .eq("email", email.trim())
+    .eq("email", email.trim().toLowerCase()) 
     .maybeSingle();
 
   const resetToken = require('crypto').randomBytes(24).toString('hex');
   const otp = generateOTP();
 
-  // Store state in Supabase instead of session memory/cookie
-  // Use supabaseAdmin if available to bypass RLS, otherwise fallback
-  const client = supabaseAdmin || supabase;
+  // Store state in Supabase
   const { error: upsertErr } = await client.from("settings").upsert(
     { key: "signup_reset_" + resetToken, value: JSON.stringify({
-        email: email.trim(),
+        email: email.trim().toLowerCase(), // Keep it lowercase here too
         otp,
         expiresAt: Date.now() + 10 * 60 * 1000,
         attempts: 0,
