@@ -636,12 +636,8 @@ app.post("/forgot-password", async (req, res) => {
     }
   }
 
-  // Restore the original UX: render the success message on the same page
-  res.render("forgot-password", {
-    error: null,
-    success: "If an account exists for that email, a reset code has been sent.",
-    resetToken: resetToken
-  });
+ // Bypass the frontend and safely redirect directly from the server with the token attached
+  return res.redirect(`/reset-password?token=${resetToken}`);
 });
 
 // ── Reset Password (OTP verify + new password) ────────────────
