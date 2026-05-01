@@ -503,7 +503,8 @@ app.post("/verify-otp", async (req, res) => {
 
   const userId = newUser.user.id;
 
-  const { error: profileError } = await supabase.from("profiles").insert([
+ const client = supabaseAdmin || supabase;
+  const { error: profileError } = await client.from("profiles").insert([
     { id: userId, name, email, mobile },
   ]);
 
@@ -612,7 +613,7 @@ app.post("/forgot-password", async (req, res) => {
     return renderErr("Failed to process request. Please try again.");
   }
 
-  if (profile) {
+  if (true) {
     try {
       await transporter.sendMail({
         from: `"GardenRich" <${process.env.EMAIL_USER}>`,
